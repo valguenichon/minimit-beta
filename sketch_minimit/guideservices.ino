@@ -13,9 +13,10 @@ String LocalService[] = { "ANNUAIRE",
                           "PENDU",
                           "PONG",
                           "PPP",
-                          "TAROT" };
+                          "TAROT",
+                          "RETROQUIZ" };
 
-int NB_LOCAL_SERVICES = 13;
+int NB_LOCAL_SERVICES = 14;
 
 
 

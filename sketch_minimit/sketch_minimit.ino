@@ -5,6 +5,7 @@
 #include <Arduino_JSON.h>
 #include <Minitel1B_Hard.h>
 #include <WebSocketsClient.h>
+#include "donnees_rq.h"
 Minitel minitel(Serial1, 14, 27);
 
 
@@ -50,7 +51,12 @@ void setup() {
   minitel.noCursor();
   minitel.echo(false);
   minitel.changeSpeed(1200);
-  SPIFFS.begin(true);
+  // Ne pas monter SPIFFS avec formatage automatique ici :
+  // si la partition data contient LittleFS, SPIFFS peut échouer puis formater la partition,
+  // ce qui détruit /rq_questions.txt.
+  if (!SPIFFS.begin(false)) {
+    Serial.println("SPIFFS: montage impossible, pas de formatage automatique");
+  }
   displayDemarrage();
   init_and_displayMire(0);
 }
@@ -239,6 +245,12 @@ int launchService(String minimit_service) {
     }
     setupTarots();
     loopTarots();
+    return 0;
+  }
+  // --- 3615 RETROQUIZ (service local, pas de WiFi requis) ---
+  if (minimit_service == "RETROQUIZ" || minimit_service == "14") {
+    setupRetroquiz();
+    loopRetroquiz();
     return 0;
   }
   if (minimit_service == "CONFIG") {
