@@ -288,34 +288,43 @@ static unsigned long rq_saisir(int x, int y, int maxLen,
 // ============================================================
 // ECRAN ACCUEIL
 // ============================================================
+static const String RQ_VDT_ACCUEIL =
+    "1f,42,45,0e,1b,57,20,12,44,1b,50,50,09,09,09,12,43,09,09,09,09,1b,57,20,20,09,09,09,1b,50,50,09,12,42,09,09,09,09,12,43,"
+    "1f,43,45,0e,1b,57,20,20,1b,50,23,23,1b,57,20,20,09,09,1b,40,23,20,20,20,23,09,12,42,20,20,23,09,23,20,23,20,20,23,09,09,23,20,20,20,23,"
+    "1f,44,45,0e,1b,57,20,20,1b,50,50,1b,57,20,20,1b,40,50,09,20,20,1b,50,1b,47,50,50,1b,57,20,20,09,1b,40,50,20,20,50,50,09,50,20,20,09,50,50,09,20,20,50,09,20,20,"
+    "1f,45,44,0e,1b,57,1b,40,23,20,20,20,20,1b,50,1b,47,23,09,09,1b,57,20,12,42,1b,50,23,12,42,09,09,1b,57,20,20,09,09,09,09,12,42,1b,40,23,09,09,09,20,20,09,09,20,20,"
+    "1f,46,44,0e,1b,57,20,20,09,1b,40,50,20,20,1b,50,1b,47,50,09,09,1b,57,1b,40,50,20,20,20,09,09,09,50,20,20,20,09,09,09,20,20,09,09,09,50,20,20,20,50,"
+    "1f,47,44,0e,1b,57,20,20,09,09,1b,50,23,1b,57,20,1b,50,23,09,09,09,12,43,09,09,09,09,12,43,09,09,09,12,42,09,09,09,09,12,43,"
+    "1f,48,4a,0e,50,50,1b,57,20,20,1b,50,50,09,09,09,12,42,09,09,09,09,09,09,1b,57,20,20,09,09,09,1b,50,50,12,43,"
+    "1f,49,49,0e,1b,57,1b,40,23,20,20,1b,50,1b,47,23,23,1b,57,20,1b,40,23,09,09,20,20,09,23,23,09,09,09,1b,50,1b,47,12,42,09,1b,57,1b,40,12,42,20,20,20,20,"
+    "1f,4a,49,0e,1b,57,20,20,09,1b,50,50,09,1b,57,20,20,09,12,42,09,09,12,42,09,09,09,12,42,09,1b,40,50,50,1b,50,1b,47,50,1b,57,20,1b,40,50,"
+    "1f,4b,49,0e,1b,57,20,20,09,20,1b,40,23,20,1b,50,1b,47,23,09,1b,57,20,20,09,1b,40,23,20,20,09,09,09,20,1b,50,1b,47,23,09,09,1b,57,1b,40,23,20,1b,50,1b,47,23,"
+    "1f,4c,49,0e,1b,57,1b,40,50,20,20,20,20,1b,50,1b,47,50,09,09,1b,57,1b,40,50,20,20,20,50,20,20,09,20,20,09,09,20,20,20,20,20,20,"
+    "1f,4d,4a,0e,23,12,42,1b,57,20,20,1b,40,23,09,09,1b,50,1b,47,12,43,09,12,42,09,12,42,09,09,12,46,"
+    "1f,4e,4e,0e,1b,57,1b,40,50,1f,41,4d,0f,1b,5d,33,36,31,35,1b,5c,"
+    "1f,4f,4a,50,72,65,73,73,20,53,74,61,72,74,20,52,65,74,72,6f,67,61,6d,69,6e,67";
+
 static void rq_afficheAccueil() {
     rq_totalBanque = rq_chargerQuestions(rq_banque);
     minitel.newScreen();
-    rq_bandeau();
-    minitel.newXY(1, 5);
-    minitel.attributs(CARACTERE_CYAN);
-    minitel.print("** 3615 RETROQUIZ **");
-    minitel.attributs(CARACTERE_BLANC);
-    minitel.newXY(1, 7);
-    minitel.print("Le quiz du retrogaming !");
-    rq_ligneH(9, '=');
-    minitel.newXY(1, 12);
+    checkScreen(RQ_VDT_ACCUEIL, 0, 0);
+    // y=18 : JOUER | CLASSEMENTS en 2 colonnes
+    minitel.newXY(1, 18);
     minitel.attributs(CARACTERE_VERT);
-    minitel.print("1 | JOUER AU QUIZ");
-    minitel.newXY(1, 14);
-    minitel.print("2 | CLASSEMENTS");
-    minitel.newXY(1, 16);
-    minitel.print("3 | ADMIN");
+    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("J"); minitel.attributs(FIN_LIGNAGE); minitel.print("OUER");
+    minitel.newXY(21, 18);
+    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("C"); minitel.attributs(FIN_LIGNAGE); minitel.print("LASSEMENTS");
     minitel.attributs(CARACTERE_BLANC);
-    minitel.newXY(1, 19);
-    minitel.print("Tapez votre choix puis ENVOI");
-    minitel.newXY(1, 21);
+    // y=23-24 : pied avec ADMIN à gauche, nb questions à droite
+    rq_ligneH(23);
+    minitel.newXY(1, 24);
     minitel.attributs(CARACTERE_CYAN);
-    char nbq[41];
-    sprintf(nbq, "%d questions disponibles", rq_totalBanque);
+    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("A"); minitel.attributs(FIN_LIGNAGE); minitel.print("DMIN");
+    char nbq[21];
+    sprintf(nbq, "%d questions", rq_totalBanque);
+    minitel.newXY(40 - (int)strlen(nbq), 24);
     minitel.print(nbq);
     minitel.attributs(CARACTERE_BLANC);
-    rq_pied("CONNEXION/FIN pour quitter");
     rq_etat = RQ_ACCUEIL;
     currentEcran = "RQ_ACCUEIL";
     Serial.println("RQ: accueil affiche, etat=" + String(rq_etat));
@@ -741,9 +750,9 @@ void loopRetroquiz() {
                 }
                 if (touche == ENVOI || touche == SUITE) {
                     Serial.println("RQ: ENVOI/SUITE, input=[" + input + "]");
-                    if      (input == "1") rq_afficheSelectionMode();
-                    else if (input == "2") rq_afficheLeaderboardsNav();
-                    else if (input == "3") {
+                    if      (input == "J") rq_afficheSelectionMode();
+                    else if (input == "C") rq_afficheLeaderboardsNav();
+                    else if (input == "A") {
                         if (rq_adminSaisirMdp()) rq_afficheAdminMenu();
                         else rq_afficheAccueil();
                     }
