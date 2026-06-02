@@ -293,22 +293,22 @@ static void rq_afficheAccueil() {
     rq_bandeau();
     minitel.newXY(1, 5);
     minitel.attributs(CARACTERE_CYAN);
-    minitel.print("  ** 3615 RETROQUIZ **");
+    minitel.print("** 3615 RETROQUIZ **");
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 7);
-    minitel.print("  Le quiz du retrogaming !");
+    minitel.print("Le quiz du retrogaming !");
     rq_ligneH(9, '=');
     minitel.newXY(1, 12);
     minitel.attributs(CARACTERE_VERT);
-    minitel.print("  [ 1 ]  JOUER AU QUIZ");
+    minitel.print("1 | JOUER AU QUIZ");
     minitel.newXY(1, 14);
-    minitel.print("  [ 2 ]  CLASSEMENTS");
+    minitel.print("2 | CLASSEMENTS");
     minitel.newXY(1, 16);
-    minitel.print("  [ 3 ]  ADMIN");
+    minitel.print("3 | ADMIN");
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 19);
-    minitel.print("  Tapez votre choix puis ENVOI");
-    rq_pied("  CONNEXION/FIN pour quitter");
+    minitel.print("Tapez votre choix puis ENVOI");
+    rq_pied("CONNEXION/FIN pour quitter");
     rq_etat = RQ_ACCUEIL;
     currentEcran = "RQ_ACCUEIL";
     Serial.println("RQ: accueil affiche, etat=" + String(rq_etat));
@@ -343,15 +343,15 @@ static void rq_afficheAdminMenu() {
     rq_ligneH(5, '=');
     minitel.newXY(1, 8);
     minitel.attributs(CARACTERE_VERT);
-    minitel.print("  [ 1 ]  Reinitialiser classements");
+    minitel.print("1 | Reinitialiser classements");
     minitel.newXY(1, 10);
-    minitel.print("  [ 2 ]  Modifier une question");
+    minitel.print("2 | Modifier une question");
     minitel.newXY(1, 12);
-    minitel.print("  [ 3 ]  Ajouter une question");
+    minitel.print("3 | Ajouter une question");
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 16);
-    minitel.print("  Tapez votre choix puis ENVOI");
-    rq_pied("  SOMMAIRE = accueil");
+    minitel.print("Tapez votre choix puis ENVOI");
+    rq_pied("SOMMAIRE = accueil");
     rq_etat = RQ_ADMIN_MENU;
     currentEcran = "RQ_ADMIN_MENU";
 }
@@ -363,17 +363,17 @@ static void rq_afficheAdminReset() {
     rq_ligneH(5, '=');
     minitel.newXY(1, 8);
     minitel.attributs(CARACTERE_VERT);
-    minitel.print("  [ Z ]  ZEN");
+    minitel.print(""); minitel.attributs(DEBUT_LIGNAGE); minitel.print("Z"); minitel.attributs(FIN_LIGNAGE); minitel.print("EN");
     minitel.newXY(1, 10);
-    minitel.print("  [ A ]  ARCADE");
+    minitel.print(""); minitel.attributs(DEBUT_LIGNAGE); minitel.print("A"); minitel.attributs(FIN_LIGNAGE); minitel.print("RCADE");
     minitel.newXY(1, 12);
-    minitel.print("  [ M ]  MORT SUBITE");
+    minitel.print(""); minitel.attributs(DEBUT_LIGNAGE); minitel.print("M"); minitel.attributs(FIN_LIGNAGE); minitel.print("ORT SUBITE");
     minitel.newXY(1, 14);
-    minitel.print("  [ T ]  TOUS");
+    minitel.print(""); minitel.attributs(DEBUT_LIGNAGE); minitel.print("T"); minitel.attributs(FIN_LIGNAGE); minitel.print("OUS");
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 17);
-    minitel.print("  Tapez votre choix puis ENVOI");
-    rq_pied("  SOMMAIRE = menu admin");
+    minitel.print("Tapez votre choix puis ENVOI");
+    rq_pied("SOMMAIRE = menu admin");
     rq_etat = RQ_ADMIN_RESET;
     currentEcran = "RQ_ADMIN_RESET";
 }
@@ -525,12 +525,12 @@ static void rq_afficheSelectionMode() {
     rq_ligneH(7, '=');
     minitel.newXY(1, 9);
     minitel.attributs(CARACTERE_VERT);
-    minitel.print("  [ 1 ]  ZEN       - Quiz classique");
+    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("Z"); minitel.attributs(FIN_LIGNAGE); minitel.print("EN - Quiz classique");
     minitel.newXY(1, 11);
-    minitel.print("  [ 2 ]  ARCADE    - 10s par question !");
+    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("A"); minitel.attributs(FIN_LIGNAGE); minitel.print("RCADE - 10s par question");
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 13);
-    minitel.print("  [ 3 ]  MORT SUBITE - survie !");
+    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("M"); minitel.attributs(FIN_LIGNAGE); minitel.print("ORT SUBITE - survie !");
     minitel.newXY(1, 16);
     minitel.print("  Tapez votre choix puis ENVOI");
     rq_pied("  SOMMAIRE = accueil");
@@ -578,12 +578,12 @@ static void rq_afficheLeaderboardsNav() {
     rq_ligneH(7, '=');
     minitel.newXY(1, 9);
     minitel.attributs(CARACTERE_VERT);
-    minitel.print("  [ Z ]  ZEN       - scores classiques");
+    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("Z"); minitel.attributs(FIN_LIGNAGE); minitel.print("EN - classique");
     minitel.newXY(1, 11);
-    minitel.print("  [ A ]  ARCADE    - scores par rapidite");
+    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("A"); minitel.attributs(FIN_LIGNAGE); minitel.print("RCADE - rapidité");
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 13);
-    minitel.print("  [ M ]  MORT SUBITE - survie");
+    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("M"); minitel.attributs(FIN_LIGNAGE); minitel.print("ORT SUBITE - survie");
     minitel.newXY(1, 16);
     minitel.print("  Tapez Z, A ou M puis ENVOI");
     rq_pied("  SOMMAIRE = accueil");
@@ -753,9 +753,9 @@ void loopRetroquiz() {
                 if (touche == CONNEXION_FIN) return;
                 if (touche == SOMMAIRE) { rq_afficheAccueil(); break; }
                 if (touche == ENVOI || touche == SUITE) {
-                    if      (input == "1") { rq_mode = RQ_MODE_ZEN;         rq_demarrerPartie(); }
-                    else if (input == "2") { rq_mode = RQ_MODE_ARCADE;      rq_demarrerPartie(); }
-                    else if (input == "3") { rq_mode = RQ_MODE_MORT_SUBITE; rq_demarrerPartie(); }
+                    if      (input == "Z") { rq_mode = RQ_MODE_ZEN;         rq_demarrerPartie(); }
+                    else if (input == "A") { rq_mode = RQ_MODE_ARCADE;      rq_demarrerPartie(); }
+                    else if (input == "M") { rq_mode = RQ_MODE_MORT_SUBITE; rq_demarrerPartie(); }
                 }
                 break;
 

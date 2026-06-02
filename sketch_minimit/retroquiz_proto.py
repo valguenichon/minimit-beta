@@ -435,11 +435,11 @@ def afficher_nav_leaderboards():
         print()
         ligne_h("=")
         print()
-        print(c("  [ Z ]  ZEN       - scores classiques", VERT))
+        print("  " + c("Z", VERT, 4) + c("EN       - scores classiques", VERT))
         print()
-        print(c("  [ A ]  ARCADE    - scores par rapidite", VERT))
+        print("  " + c("A", VERT, 4) + c("RCADE    - scores par rapidite", VERT))
         print()
-        print(c("  [ M ]  MORT SUBITE - survie", VERT))
+        print("  " + c("M", VERT, 4) + c("ORT SUBITE - survie", VERT))
         print()
         print()
         print("  Tapez Z, A ou M")
@@ -469,11 +469,11 @@ def afficher_selection_mode():
         print()
         ligne_h("=")
         print()
-        print(c("  [ 1 ]  ZEN       - Quiz classique", VERT))
+        print("  " + c("Z", VERT, 4) + c("EN       - Quiz classique", VERT))
         print()
-        print(c("  [ 2 ]  ARCADE    - 10s par question !", VERT))
+        print("  " + c("A", VERT, 4) + c("RCADE    - 10s par question !", VERT))
         print()
-        print(c("  [ 3 ]  MORT SUBITE - survie jusqu'a l'erreur", VERT))
+        print("  " + c("M", VERT, 4) + c("ORT SUBITE - survie jusqu'a l'erreur", VERT))
         print()
         print()
         print("  Tapez votre choix")
@@ -481,11 +481,11 @@ def afficher_selection_mode():
         print(c("  S = accueil", CYAN))
 
         ch = attendre_touche()
-        if ch == "1":
+        if ch == "Z":
             return MODE_ZEN
-        elif ch == "2":
+        elif ch == "A":
             return MODE_ARCADE
-        elif ch == "3":
+        elif ch == "M":
             return MODE_MORT_SUBITE
         elif ch == "S":
             return None
@@ -532,13 +532,13 @@ def afficher_admin_reset():
         print()
         ligne_h("=")
         print()
-        print(c("  [ Z ]  ZEN", VERT))
+        print(c("Z", VERT, 4) + c("EN", VERT))
         print()
-        print(c("  [ A ]  ARCADE", VERT))
+        print(c("A", VERT, 4) + c("RCADE", VERT))
         print()
-        print(c("  [ M ]  MORT SUBITE", VERT))
+        print(c("M", VERT, 4) + c("ORT SUBITE", VERT))
         print()
-        print(c("  [ T ]  TOUS", VERT))
+        print(c("T", VERT, 4) + c("OUS", VERT))
         print()
         print()
         print("  Tapez votre choix")
