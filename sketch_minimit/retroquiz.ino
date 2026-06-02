@@ -530,7 +530,7 @@ static void rq_afficheSelectionMode() {
     minitel.print("  [ 2 ]  ARCADE    - 10s par question !");
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 13);
-    minitel.print("  [ 3 ]  MORT SUBITE - bientot dispo");
+    minitel.print("  [ 3 ]  MORT SUBITE - survie !");
     minitel.newXY(1, 16);
     minitel.print("  Tapez votre choix puis ENVOI");
     rq_pied("  SOMMAIRE = accueil");
@@ -583,7 +583,7 @@ static void rq_afficheLeaderboardsNav() {
     minitel.print("  [ A ]  ARCADE    - scores par rapidite");
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 13);
-    minitel.print("  [ M ]  MORT SUBITE - bientot disponible");
+    minitel.print("  [ M ]  MORT SUBITE - survie");
     minitel.newXY(1, 16);
     minitel.print("  Tapez Z, A ou M puis ENVOI");
     rq_pied("  SOMMAIRE = accueil");

@@ -439,7 +439,7 @@ def afficher_nav_leaderboards():
         print()
         print(c("  [ A ]  ARCADE    - scores par rapidite", VERT))
         print()
-        print("  [ M ]  MORT SUBITE - bientot disponible")
+        print(c("  [ M ]  MORT SUBITE - survie", VERT))
         print()
         print()
         print("  Tapez Z, A ou M")
