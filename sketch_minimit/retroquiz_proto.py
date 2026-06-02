@@ -490,6 +490,227 @@ def afficher_selection_mode():
         elif ch == "S":
             return None
 
+# ── Admin ─────────────────────────────────────────────────────────────────────
+MDP_ADMIN = "1234"
+
+def sauvegarder_questions(questions):
+    try:
+        FICHIER_QUESTIONS.parent.mkdir(exist_ok=True)
+        with open(FICHIER_QUESTIONS, 'w', encoding='utf-8') as f:
+            for enonce, choix, rep in questions:
+                e = enonce.replace('|', '/').replace('\n', ' ')
+                c_list = [str(x).replace('|', '/').replace('\n', ' ') for x in choix]
+                f.write(f"{e}|{'|'.join(c_list)}|{rep}\n")
+        return True
+    except Exception:
+        return False
+
+def admin_demander_mdp():
+    cls()
+    bandeau()
+    print()
+    centrer_raw("** ESPACE ADMIN **", CYAN)
+    print()
+    print()
+    try:
+        import getpass
+        pwd = getpass.getpass("  Mot de passe : ")
+    except Exception:
+        pwd = input("  Mot de passe : ")
+    if pwd == MDP_ADMIN:
+        return True
+    print(c("  Mot de passe incorrect !", ROUGE))
+    time.sleep(1.5)
+    return False
+
+def afficher_admin_reset():
+    while True:
+        cls()
+        bandeau()
+        print()
+        centrer_raw("** REINITIALISER CLASSEMENT **", CYAN)
+        print()
+        ligne_h("=")
+        print()
+        print(c("  [ Z ]  ZEN", VERT))
+        print()
+        print(c("  [ A ]  ARCADE", VERT))
+        print()
+        print(c("  [ M ]  MORT SUBITE", VERT))
+        print()
+        print(c("  [ T ]  TOUS", VERT))
+        print()
+        print()
+        print("  Tapez votre choix")
+        ligne_h()
+        print(c("  S = menu admin", CYAN))
+        ch = attendre_touche()
+        if ch == "S":
+            return
+        modes_map = {"Z": [MODE_ZEN], "A": [MODE_ARCADE],
+                     "M": [MODE_MORT_SUBITE],
+                     "T": [MODE_ZEN, MODE_ARCADE, MODE_MORT_SUBITE]}
+        if ch in modes_map:
+            vide = [{"pseudo": "---", "points": 0} for _ in range(MAX_SCORES)]
+            for m in modes_map[ch]:
+                sauvegarder_scores(vide[:], m)
+            print(c("  Classement(s) reinitialise(s) !", VERT))
+            time.sleep(1.3)
+            return
+
+def afficher_admin_liste():
+    NB_PAR_PAGE = 5
+    page = 0
+    while True:
+        questions = charger_questions()
+        total_pages = max(1, (len(questions) + NB_PAR_PAGE - 1) // NB_PAR_PAGE)
+        page = max(0, min(page, total_pages - 1))
+        debut = page * NB_PAR_PAGE
+        cls()
+        bandeau()
+        print()
+        centrer_raw("** QUESTIONS **", JAUNE)
+        ligne_h()
+        for i in range(NB_PAR_PAGE):
+            idx = debut + i
+            if idx < len(questions):
+                enonce, _, _ = questions[idx]
+                print(f"  {idx+1:2d}. {enonce[:33]}")
+            else:
+                print()
+        print()
+        print(f"  Page {page+1}/{total_pages}  ({len(questions)} questions)")
+        print()
+        ligne_h()
+        print(c("  S=menu  ->=suiv  <=prec  chiffre=selectionner", CYAN))
+        ch = attendre_touche()
+        if ch == "S":
+            return
+        elif ch == "SUITE" and page < total_pages - 1:
+            page += 1
+        elif ch == "RETOUR" and page > 0:
+            page -= 1
+        elif ch.isdigit():
+            vider_buffer()
+            num_str = ch
+            sys.stdout.write(f"\r  Numero : {num_str}  ")
+            sys.stdout.flush()
+            while True:
+                c2 = lire_touche()
+                if c2 in ("\r", "\n"):
+                    print()
+                    break
+                elif c2 == "\x08":
+                    if num_str:
+                        num_str = num_str[:-1]
+                        sys.stdout.write(f"\r  Numero : {num_str}   ")
+                        sys.stdout.flush()
+                elif c2.isdigit() and len(num_str) < 3:
+                    num_str += c2
+                    sys.stdout.write(c2)
+                    sys.stdout.flush()
+            if num_str:
+                n = int(num_str)
+                if 1 <= n <= len(questions):
+                    admin_editer_question(n - 1)
+
+def admin_editer_question(idx):
+    questions = charger_questions()
+    if idx >= len(questions):
+        return
+    enonce, choix, rep = questions[idx]
+    choix = list(choix)
+    labels = ["Enonce", "Choix A", "Choix B", "Choix C", "Choix D", "Bonne rep (A-D)"]
+    for f in range(6):
+        current = ([enonce] + choix + [rep])[f]
+        cls()
+        bandeau()
+        print()
+        centrer_raw("** MODIFIER QUESTION **", CYAN)
+        print()
+        print(f"  Question {idx+1} / {len(questions)}")
+        print()
+        print(c(f"  {labels[f]} :", CYAN))
+        print(f"  {current}")
+        print()
+        print("  Nouveau (vide = conserver) :")
+        while True:
+            val = input("  > ").strip()
+            if not val:
+                break
+            if f == 5:
+                val = val[0].upper()
+                if val in "ABCD":
+                    rep = val
+                    break
+                print(c("  (A, B, C ou D requis)", ROUGE))
+            elif f == 0:
+                enonce = val
+                break
+            else:
+                choix[f - 1] = val
+                break
+    questions[idx] = (enonce, choix, rep)
+    sauvegarder_questions(questions)
+    print(c("  Sauvegarde OK !", VERT))
+    time.sleep(1.2)
+
+def admin_ajouter_question():
+    cls()
+    bandeau()
+    print()
+    centrer_raw("** AJOUTER QUESTION **", CYAN)
+    print()
+    champs = ["Enonce", "Choix A", "Choix B", "Choix C", "Choix D"]
+    valeurs = []
+    for champ in champs:
+        while True:
+            val = input(f"  {champ} : ").strip()
+            if val:
+                valeurs.append(val)
+                break
+            print(c("  (obligatoire)", ROUGE))
+    while True:
+        rep = input("  Bonne reponse (A/B/C/D) : ").strip()
+        if rep and rep[0].upper() in "ABCD":
+            rep = rep[0].upper()
+            break
+        print(c("  (A, B, C ou D)", ROUGE))
+    questions = charger_questions()
+    questions.append((valeurs[0], valeurs[1:5], rep))
+    sauvegarder_questions(questions)
+    print(c("  Question ajoutee !", VERT))
+    time.sleep(1.5)
+
+def afficher_admin_menu():
+    while True:
+        cls()
+        bandeau()
+        print()
+        centrer_raw("** ADMIN **", CYAN)
+        print()
+        ligne_h("=")
+        print()
+        print(c("  [ 1 ]  Reinitialiser classements", VERT))
+        print()
+        print(c("  [ 2 ]  Modifier une question", VERT))
+        print()
+        print(c("  [ 3 ]  Ajouter une question", VERT))
+        print()
+        print()
+        print("  Tapez votre choix")
+        ligne_h()
+        print(c("  S = accueil", CYAN))
+        ch = attendre_touche()
+        if ch == "S":
+            return
+        elif ch == "1":
+            afficher_admin_reset()
+        elif ch == "2":
+            afficher_admin_liste()
+        elif ch == "3":
+            admin_ajouter_question()
+
 # ── Accueil ───────────────────────────────────────────────────────────────────
 def afficher_accueil(nb_questions):
     cls()
@@ -505,6 +726,8 @@ def afficher_accueil(nb_questions):
     print(c("  [ 1 ]  JOUER AU QUIZ", VERT))
     print()
     print(c("  [ 2 ]  CLASSEMENTS", VERT))
+    print()
+    print(c("  [ 3 ]  ADMIN", VERT))
     print()
     print()
     print("  Tapez votre choix")
@@ -530,6 +753,9 @@ def main():
                 demarrer_partie(questions, mode)
         elif ch == "2":
             afficher_nav_leaderboards()
+        elif ch == "3":
+            if admin_demander_mdp():
+                afficher_admin_menu()
 
 if __name__ == "__main__":
     main()
