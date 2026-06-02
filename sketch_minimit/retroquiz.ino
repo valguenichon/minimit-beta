@@ -4,7 +4,7 @@
 //  Ouvrir le moniteur serie a 115200 bauds pendant le test.
 // ============================================================
 
-#include "donnees_rq.h"
+#include "rq_donnees.h"
 
 #define RQ_ACCUEIL     0
 #define RQ_JEU         1

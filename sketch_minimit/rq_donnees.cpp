@@ -12,7 +12,7 @@
 //  Scores : Preferences/NVS, namespace "rq"
 // ============================================================
 
-#include "donnees_rq.h"
+#include "rq_donnees.h"
 
 #include <Arduino.h>
 #include <FS.h>
@@ -255,28 +255,18 @@ static int rq_compterQuestionsLittleFS() {
     return count;
 }
 
-static void rq_initialiserLeaderboardSiNecessaire() {
+static void rq_initialiserLeaderboardPourMode(int mode) {
+    const char* ns = rq_namespacePourMode(mode);
     Preferences prefs;
-    prefs.begin(RQ_NAMESPACE_NVS, true);
-
-    bool scoresInit = prefs.getBool("scores_init", false);
-    bool ancienneTableExiste = prefs.isKey(rq_cleScore(0, "p").c_str()) ||
-                               prefs.isKey(rq_cleScore(0, "v").c_str());
-
+    prefs.begin(ns, true);
+    bool dejainit = prefs.getBool("scores_init", false);
     prefs.end();
 
-    if (scoresInit || ancienneTableExiste) {
-        if (!scoresInit) {
-            prefs.begin(RQ_NAMESPACE_NVS, false);
-            prefs.putBool("scores_init", true);
-            prefs.end();
-        }
-        return;
-    }
+    if (dejainit) return;
 
-    rq_reinitialiserLeaderboard();
+    rq_reinitialiserLeaderboard(mode);
 
-    prefs.begin(RQ_NAMESPACE_NVS, false);
+    prefs.begin(ns, false);
     prefs.putBool("scores_init", true);
     prefs.end();
 }
@@ -287,7 +277,7 @@ static void rq_initialiserLeaderboardSiNecessaire() {
 void rq_initialiserFichiers() {
     if (!rq_monterLittleFS()) {
         Serial.println("RQ: LittleFS non disponible, questions non initialisees");
-        rq_initialiserLeaderboardSiNecessaire();
+        for (int m = 0; m <= 2; m++) rq_initialiserLeaderboardPourMode(m);
         return;
     }
 
@@ -295,7 +285,7 @@ void rq_initialiserFichiers() {
 
     if (nbQuestions > 0) {
         Serial.println("RQ: LittleFS OK, " + String(nbQuestions) + " questions dans " + RQ_FICHIER_QUESTIONS);
-        rq_initialiserLeaderboardSiNecessaire();
+        for (int m = 0; m <= 2; m++) rq_initialiserLeaderboardPourMode(m);
         return;
     }
 
@@ -304,7 +294,7 @@ void rq_initialiserFichiers() {
     RQ_Question* anciennes = new RQ_Question[RQ_MAX_QUESTIONS];
     if (!anciennes) {
         Serial.println("RQ: ERREUR memoire migration questions");
-        rq_initialiserLeaderboardSiNecessaire();
+        for (int m = 0; m <= 2; m++) rq_initialiserLeaderboardPourMode(m);
         return;
     }
 
@@ -318,7 +308,7 @@ void rq_initialiserFichiers() {
             Serial.println("RQ: ERREUR migration NVS vers LittleFS");
         }
         delete[] anciennes;
-        rq_initialiserLeaderboardSiNecessaire();
+        for (int m = 0; m <= 2; m++) rq_initialiserLeaderboardPourMode(m);
         return;
     }
 
@@ -327,16 +317,22 @@ void rq_initialiserFichiers() {
     // Dernier recours : creation du fichier avec les questions par defaut.
     Serial.println("RQ: aucune question trouvee, creation du fichier par defaut");
     rq_ecrireQuestionsDefautDansLittleFS();
-    rq_initialiserLeaderboardSiNecessaire();
+    for (int m = 0; m <= 2; m++) rq_initialiserLeaderboardPourMode(m);
 }
 
 // ============================================================
 // LEADERBOARD
-// Stockage conserve en NVS : c'est le bon usage pour de petites valeurs.
+// 3 namespaces NVS independants : rq_zen, rq_arc, rq_ms
 // ============================================================
-void rq_chargerLeaderboard(RQ_Score table[]) {
+static const char* rq_namespacePourMode(int mode) {
+    if (mode == 1) return "rq_arc";
+    if (mode == 2) return "rq_ms";
+    return "rq_zen";
+}
+
+void rq_chargerLeaderboard(RQ_Score table[], int mode) {
     Preferences prefs;
-    prefs.begin(RQ_NAMESPACE_NVS, true);
+    prefs.begin(rq_namespacePourMode(mode), true);
 
     for (int i = 0; i < RQ_MAX_SCORES; i++) {
         String pseudo = prefs.getString(rq_cleScore(i, "p").c_str(), "---");
@@ -347,9 +343,9 @@ void rq_chargerLeaderboard(RQ_Score table[]) {
     prefs.end();
 }
 
-void rq_sauvegarderLeaderboard(RQ_Score table[]) {
+void rq_sauvegarderLeaderboard(RQ_Score table[], int mode) {
     Preferences prefs;
-    prefs.begin(RQ_NAMESPACE_NVS, false);
+    prefs.begin(rq_namespacePourMode(mode), false);
 
     for (int i = 0; i < RQ_MAX_SCORES; i++) {
         prefs.putString(rq_cleScore(i, "p").c_str(), table[i].pseudo);
@@ -360,7 +356,7 @@ void rq_sauvegarderLeaderboard(RQ_Score table[]) {
     prefs.end();
 }
 
-void rq_reinitialiserLeaderboard() {
+void rq_reinitialiserLeaderboard(int mode) {
     RQ_Score vide[RQ_MAX_SCORES];
 
     for (int i = 0; i < RQ_MAX_SCORES; i++) {
@@ -368,10 +364,10 @@ void rq_reinitialiserLeaderboard() {
         vide[i].points = 0;
     }
 
-    rq_sauvegarderLeaderboard(vide);
+    rq_sauvegarderLeaderboard(vide, mode);
 }
 
-bool rq_insererScore(RQ_Score table[], const char* pseudo, int points) {
+bool rq_insererScore(RQ_Score table[], const char* pseudo, int points, int mode) {
     if (points <= table[RQ_MAX_SCORES - 1].points &&
         table[RQ_MAX_SCORES - 1].points != 0) {
         return false;
@@ -391,7 +387,7 @@ bool rq_insererScore(RQ_Score table[], const char* pseudo, int points) {
         }
     }
 
-    rq_sauvegarderLeaderboard(table);
+    rq_sauvegarderLeaderboard(table, mode);
     return true;
 }
 
@@ -479,17 +475,14 @@ bool rq_modifierQuestion(int index, const RQ_Question& q) {
 // ============================================================
 // TIRAGE ALEATOIRE SANS REPETITION
 // ============================================================
-void rq_tirerQuestions(int totalBanque, int indices[]) {
-    for (int i = 0; i < RQ_NB_QUESTIONS_PARTIE; i++) {
+void rq_tirerQuestions(int totalBanque, int indices[], int nbATirer) {
+    if (nbATirer > totalBanque) nbATirer = totalBanque;
+
+    for (int i = 0; i < nbATirer; i++) {
         indices[i] = -1;
     }
 
     if (totalBanque <= 0) return;
-
-    int nbATirer = RQ_NB_QUESTIONS_PARTIE;
-    if (totalBanque < nbATirer) {
-        nbATirer = totalBanque;
-    }
 
     // Tableau temporaire de tous les index disponibles.
     // Allocation dynamique pour ne pas charger la pile.

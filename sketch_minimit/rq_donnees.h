@@ -1,8 +1,8 @@
-#ifndef DONNEES_RQ_H
-#define DONNEES_RQ_H
+#ifndef RQ_DONNEES_H
+#define RQ_DONNEES_H
 
 // ============================================================
-//  DONNEES_RQ.H
+//  RQ_DONNEES.H
 //  Stockage :
 //  - Questions : LittleFS, fichier /rq_questions.txt
 //  - Scores    : Preferences/NVS
@@ -31,15 +31,16 @@ struct RQ_Question {
 
 void rq_initialiserFichiers();
 
-void rq_chargerLeaderboard(RQ_Score table[]);
-void rq_sauvegarderLeaderboard(RQ_Score table[]);
-void rq_reinitialiserLeaderboard();
-bool rq_insererScore(RQ_Score table[], const char* pseudo, int points);
+void rq_chargerLeaderboard    (RQ_Score table[], int mode);
+void rq_sauvegarderLeaderboard(RQ_Score table[], int mode);
+void rq_reinitialiserLeaderboard(int mode);
+bool rq_insererScore(RQ_Score table[], const char* pseudo, int points, int mode);
 
 int  rq_chargerQuestions(RQ_Question banque[]);
 bool rq_sauvegarderNouvelleQuestion(const RQ_Question& q);
 bool rq_modifierQuestion(int index, const RQ_Question& q);
 
-void rq_tirerQuestions(int totalBanque, int indices[]);
+void rq_tirerQuestions(int totalBanque, int indices[],
+                       int nbATirer = RQ_NB_QUESTIONS_PARTIE);
 
 #endif
