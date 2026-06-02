@@ -12,18 +12,28 @@
 #define RQ_ADMIN_MENU  3
 #define RQ_ADMIN_RESET 4
 #define RQ_ADMIN_LISTE 5
-#define RQ_SELECTION_MODE 6
+#define RQ_SELECTION_MODE   6
+#define RQ_LEADERBOARDS_NAV 7
 #define RQ_MAX_BANQUE 100
 
 #define RQ_MODE_ZEN         0
 #define RQ_MODE_ARCADE      1
 #define RQ_MODE_MORT_SUBITE 2
 
+#define RQ_TEMPS_LIMITE_ZEN_MS 20000
+
+static unsigned long rq_getTimeLimitMs() {
+    return (rq_mode == RQ_MODE_ZEN)
+           ? (unsigned long)RQ_TEMPS_LIMITE_ZEN_MS
+           : (unsigned long)RQ_TEMPS_LIMITE_MS;
+}
+
 static int rq_etat = RQ_ACCUEIL;
 
 static RQ_Question rq_banque[RQ_MAX_BANQUE];
 static int         rq_totalBanque = 0;
-static int         rq_indices[RQ_NB_QUESTIONS_PARTIE];
+static int         rq_indices[RQ_MAX_BANQUE];
+static int         rq_nbQuestions = RQ_NB_QUESTIONS_PARTIE;
 static int         rq_questionNum = 0;
 static int         rq_score       = 0;
 static char        rq_reponse     = 0;
@@ -33,6 +43,8 @@ static RQ_Question   rq_editQ;
 static unsigned long rq_questionStartTime  = 0;
 static bool          rq_timedOut           = false;
 static int           rq_mode               = RQ_MODE_ZEN;
+static int           rq_lbMode             = RQ_MODE_ZEN;
+static int           rq_lbPage             = 0;
 
 // ============================================================
 // UTILITAIRES
@@ -56,7 +68,7 @@ static void rq_bandeau(int numQ = 0) {
     if (numQ > 0) {
         char buf[41];
         sprintf(buf, "3615 RETROQUIZ              [%02d/%02d]",
-                numQ, RQ_NB_QUESTIONS_PARTIE);
+                numQ, rq_nbQuestions);
         minitel.print(buf);
     } else {
         minitel.print("3615 RETROQUIZ                        ");
@@ -73,66 +85,151 @@ static void rq_pied(const String& aide) {
     minitel.attributs(CARACTERE_BLANC);
 }
 
+static void rq_afficherEnonce(const String& texte) {
+    const int LARGEUR = 38;
+    int debut = 0, len = (int)texte.length(), ligne = 3;
+    while (debut < len && ligne <= 6) {
+        int fin = debut + LARGEUR;
+        String portion;
+        if (fin >= len) {
+            portion = texte.substring(debut);
+            debut = len;
+        } else {
+            int coupe = fin;
+            while (coupe > debut && texte.charAt(coupe) != ' ') coupe--;
+            if (coupe == debut) coupe = fin;
+            portion = texte.substring(debut, coupe);
+            debut = (texte.charAt(coupe) == ' ') ? coupe + 1 : coupe;
+        }
+        minitel.newXY(1, ligne++);
+        minitel.attributs(CARACTERE_CYAN);
+        minitel.print("  " + portion);
+        minitel.attributs(CARACTERE_BLANC);
+    }
+}
+
+static void rq_splitChoix(const String& text, String& l1, String& l2) {
+    int len = (int)text.length();
+    if (len <= 15) { l1 = text; l2 = ""; return; }
+    int cut = 15;
+    while (cut > 0 && text.charAt(cut) != ' ') cut--;
+    if (cut == 0) cut = 15;
+    l1 = text.substring(0, cut);
+    int start2 = (text.charAt(cut) == ' ') ? cut + 1 : cut;
+    l2 = text.substring(start2);
+    if ((int)l2.length() > 15) l2 = l2.substring(0, 15);
+}
+
+static void rq_highlightReponse(int idx) {
+    RQ_Question& q = rq_banque[rq_indices[rq_questionNum]];
+    for (int row = 0; row < 2; row++) {
+        int idxL = row * 2;
+        int idxR = row * 2 + 1;
+        int y    = 9 + row * 3;
+        String l1L, l2L, l1R, l2R;
+        rq_splitChoix(q.choix[idxL], l1L, l2L);
+        rq_splitChoix(q.choix[idxR], l1R, l2R);
+        char b1L[21], b2L[21], b1R[21], b2R[21];
+        sprintf(b1L, "  %c/ %-15s", '1'+idxL, l1L.c_str());
+        sprintf(b2L, "     %-15s",            l2L.c_str());
+        sprintf(b1R, "  %c/ %-15s", '1'+idxR, l1R.c_str());
+        sprintf(b2R, "     %-15s",            l2R.c_str());
+
+        minitel.newXY(1, y);
+        if (idxL == idx) minitel.attributs(INVERSION_FOND);
+        minitel.print(b1L);
+        minitel.attributs(FOND_NOIR); minitel.attributs(CARACTERE_BLANC);
+        minitel.newXY(21, y);
+        if (idxR == idx) minitel.attributs(INVERSION_FOND);
+        minitel.print(b1R);
+        minitel.attributs(FOND_NOIR); minitel.attributs(CARACTERE_BLANC);
+
+        minitel.newXY(1, y+1);
+        if (idxL == idx) minitel.attributs(INVERSION_FOND);
+        minitel.print(b2L);
+        minitel.attributs(FOND_NOIR); minitel.attributs(CARACTERE_BLANC);
+        minitel.newXY(21, y+1);
+        if (idxR == idx) minitel.attributs(INVERSION_FOND);
+        minitel.print(b2R);
+        minitel.attributs(FOND_NOIR); minitel.attributs(CARACTERE_BLANC);
+    }
+}
+
 static void rq_afficherQuestion(int numQ) {
     RQ_Question& q = rq_banque[rq_indices[numQ]];
     minitel.newScreen();
     rq_bandeau(numQ + 1);
-    minitel.newXY(1, 3);
-    minitel.attributs(CARACTERE_CYAN);
-    minitel.print("  " + q.enonce);
-    minitel.attributs(CARACTERE_BLANC);
+    rq_afficherEnonce(q.enonce);
     rq_ligneH(7);
-    const char lettres[] = {'A','B','C','D'};
-    for (int i = 0; i < 4; i++) {
-        minitel.newXY(1, 9 + i * 2);
-        char label[5];
-        sprintf(label, "  %c/ ", lettres[i]);
-        minitel.print(label);
-        minitel.print(q.choix[i]);
+    delay(2000);
+    for (int row = 0; row < 2; row++) {
+        int idxL = row * 2;
+        int idxR = row * 2 + 1;
+        int y    = 9 + row * 3;
+        String l1L, l2L, l1R, l2R;
+        rq_splitChoix(q.choix[idxL], l1L, l2L);
+        rq_splitChoix(q.choix[idxR], l1R, l2R);
+        char buf1[41], buf2[41];
+        sprintf(buf1, "  %c/ %-15s  %c/ %-15s", '1'+idxL, l1L.c_str(), '1'+idxR, l1R.c_str());
+        sprintf(buf2, "     %-15s     %-15s",    l2L.c_str(), l2R.c_str());
+        minitel.newXY(1, y);   minitel.print(buf1);
+        minitel.newXY(1, y+1); minitel.print(buf2);
     }
     minitel.newXY(1, 19);
     if (rq_mode == RQ_MODE_ARCADE)
-        minitel.print("  Appuyez sur A, B, C ou D          ");
+        minitel.print("  Appuyez sur 1, 2, 3 ou 4          ");
     else
-        minitel.print("  Tapez A, B, C ou D puis ENVOI     ");
-    rq_pied("  A/B/C/D + ENVOI  SOM=Accueil");
+        minitel.print("  Tapez 1, 2, 3 ou 4 puis ENVOI     ");
+    rq_pied("  1/2/3/4 + ENVOI  SOM=Accueil");
     rq_reponse = 0;
     currentEcran = "RQ_JEU";
 }
 
-static void rq_afficherTimerRestant(int sec) {
+static void rq_afficherBarreTimer(unsigned long elapsed, int barWidth, unsigned long limitMs) {
+    int couleurFond;
+    unsigned long remaining = (elapsed < limitMs) ? limitMs - elapsed : 0;
+    if      (remaining > limitMs * 7 / 10) couleurFond = FOND_VERT;
+    else if (remaining > limitMs * 3 / 10) couleurFond = FOND_JAUNE;
+    else                                    couleurFond = FOND_ROUGE;
+
     minitel.noCursor();
-    minitel.newXY(1, 21);
-    minitel.attributs(sec <= 3 ? CARACTERE_ROUGE : CARACTERE_JAUNE);
-    char buf[41];
-    sprintf(buf, "  Temps restant : %2ds               ", sec);
-    minitel.print(buf);
+    minitel.newXY(3, 21);
+    minitel.attributs(FOND_NOIR);
+    for (int i = 0; i < 36 - barWidth; i++) minitel.print(" ");
+    minitel.attributs(couleurFond);
+    for (int i = 0; i < barWidth; i++) minitel.print(" ");
+    minitel.attributs(FOND_NOIR);
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(12, 20);
     minitel.cursor();
 }
 
-static void rq_attendreReponseAvecTimer() {
+static void rq_attendreReponseJeu() {
     rq_timedOut = false;
     touche = 0;
     userInput = "";
     minitel.echo(false);
-    int dernierSec = -1;
+    int dernierBarWidth = -1;
+    unsigned long limitMs = rq_getTimeLimitMs();
     while (true) {
-        unsigned long elapsed = millis() - rq_questionStartTime;
-        int sec = (int)((RQ_TEMPS_LIMITE_MS - (long)elapsed) / 1000);
-        if (sec < 0) sec = 0;
-        if (sec != dernierSec) {
-            dernierSec = sec;
-            rq_afficherTimerRestant(sec);
+        if (rq_mode == RQ_MODE_ARCADE || rq_mode == RQ_MODE_ZEN) {
+            unsigned long elapsed = millis() - rq_questionStartTime;
+            unsigned long remaining = (elapsed < limitMs) ? limitMs - elapsed : 0;
+            int barWidth = (int)(36L * (long)remaining / limitMs);
+            if (barWidth != dernierBarWidth) {
+                dernierBarWidth = barWidth;
+                rq_afficherBarreTimer(elapsed, barWidth, limitMs);
+            }
+            if (elapsed >= limitMs) {
+                rq_timedOut = true;
+                minitel.noCursor();
+                minitel.echo(true);
+                return;
+            }
         }
-        if (elapsed >= (unsigned long)RQ_TEMPS_LIMITE_MS) {
-            rq_timedOut = true;
-            minitel.noCursor();
-            minitel.echo(true);
-            return;
-        }
-        unsigned long k = minitel.getKeyCode(false);
+        unsigned long k = (rq_mode == RQ_MODE_MORT_SUBITE)
+                          ? minitel.getKeyCode()
+                          : minitel.getKeyCode(false);
         if (k == 0) continue;
         if (k == CONNEXION_FIN || k == SOMMAIRE || k == SUITE || k == ENVOI) {
             touche = k;
@@ -140,19 +237,14 @@ static void rq_attendreReponseAvecTimer() {
             minitel.noCursor();
             minitel.echo(true);
             return;
-        } else if (k == CORRECTION) {
-            if (userInput.length() > 0) {
-                userInput.remove(userInput.length() - 1);
-                minitel.moveCursorLeft(1);
-                minitel.print(".");
-                minitel.moveCursorLeft(1);
-            }
-        } else if (k >= 0x20 && k <= 0x7E && userInput.length() == 0) {
-            char c = toupper((char)k);
-            userInput += c;
-            minitel.print(String(c));
+        } else if (k >= '1' && k <= '4') {
+            char ch = (char)k;
+            userInput = String(ch);
             lasttouche = k;
             touche = k;
+            minitel.newXY(12, 20);
+            minitel.print(String(ch));
+            rq_highlightReponse(ch - '1');
             if (rq_mode == RQ_MODE_ARCADE) {
                 touche = ENVOI;
                 minitel.noCursor();
@@ -209,7 +301,7 @@ static void rq_afficheAccueil() {
     minitel.attributs(CARACTERE_VERT);
     minitel.print("  [ 1 ]  JOUER AU QUIZ");
     minitel.newXY(1, 14);
-    minitel.print("  [ 2 ]  LEADERBOARD");
+    minitel.print("  [ 2 ]  LEADERBOARDS");
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 17);
     minitel.print("  Tapez votre choix puis ENVOI");
@@ -248,45 +340,106 @@ static void rq_afficheSelectionMode() {
 static void rq_demarrerPartie() {
     rq_totalBanque = rq_chargerQuestions(rq_banque);
     Serial.println("RQ: questions chargees=" + String(rq_totalBanque));
-    if (rq_totalBanque < RQ_NB_QUESTIONS_PARTIE) {
-        minitel.newScreen();
-        rq_bandeau();
-        minitel.newXY(1, 10);
-        minitel.attributs(CARACTERE_ROUGE);
-        char msg[41];
-        sprintf(msg, "  Besoin de %d questions min (%d dispo).",
-                RQ_NB_QUESTIONS_PARTIE, rq_totalBanque);
-        minitel.print(msg);
-        minitel.attributs(CARACTERE_BLANC);
-        rq_pied("  SOMMAIRE = retour accueil");
-        rq_etat = RQ_LEADERBOARD;
-        currentEcran = "RQ_ERREUR";
-        return;
+    if (rq_mode == RQ_MODE_MORT_SUBITE) {
+        rq_nbQuestions = rq_totalBanque;
+    } else {
+        rq_nbQuestions = RQ_NB_QUESTIONS_PARTIE;
+        if (rq_totalBanque < RQ_NB_QUESTIONS_PARTIE) {
+            minitel.newScreen();
+            rq_bandeau();
+            minitel.newXY(1, 10);
+            minitel.attributs(CARACTERE_ROUGE);
+            char msg[41];
+            sprintf(msg, "  Besoin de %d questions min (%d dispo).",
+                    RQ_NB_QUESTIONS_PARTIE, rq_totalBanque);
+            minitel.print(msg);
+            minitel.attributs(CARACTERE_BLANC);
+            rq_pied("  SOMMAIRE = retour accueil");
+            rq_etat = RQ_LEADERBOARD;
+            currentEcran = "RQ_ERREUR";
+            return;
+        }
     }
-    rq_tirerQuestions(rq_totalBanque, rq_indices);
+    rq_tirerQuestions(rq_totalBanque, rq_indices, rq_nbQuestions);
     rq_questionNum = 0;
     rq_score = 0;
     rq_afficherQuestion(0);
     rq_etat = RQ_JEU;
 }
 
-static void rq_afficheLeaderboard() {
-    RQ_Score lb[RQ_MAX_SCORES];
-    rq_chargerLeaderboard(lb);
+static void rq_afficheLeaderboardsNav() {
     minitel.newScreen();
     rq_bandeau();
-    minitel.newXY(1, 3);
-    minitel.attributs(CARACTERE_JAUNE);
-    rq_centrer("** TOP 10 **", 3);
+    minitel.newXY(1, 5);
+    minitel.attributs(CARACTERE_CYAN);
+    rq_centrer("** LEADERBOARDS **", 5);
     minitel.attributs(CARACTERE_BLANC);
-    for (int i = 0; i < RQ_MAX_SCORES; i++) {
+    rq_ligneH(7, '=');
+    minitel.newXY(1, 9);
+    minitel.attributs(CARACTERE_VERT);
+    minitel.print("  [ Z ]  ZEN       - scores classiques");
+    minitel.newXY(1, 11);
+    minitel.print("  [ A ]  ARCADE    - scores par rapidite");
+    minitel.attributs(CARACTERE_BLANC);
+    minitel.newXY(1, 13);
+    minitel.print("  [ M ]  MORT SUBITE - bientot disponible");
+    minitel.newXY(1, 16);
+    minitel.print("  Tapez Z, A ou M puis ENVOI");
+    rq_pied("  SOMMAIRE = accueil");
+    rq_etat = RQ_LEADERBOARDS_NAV;
+    currentEcran = "RQ_LEADERBOARDS_NAV";
+}
+
+static void rq_afficheLeaderboard() {
+    RQ_Score lb[RQ_MAX_SCORES];
+    rq_chargerLeaderboard(lb, rq_lbMode);
+
+    const char* nomMode = (rq_lbMode == RQ_MODE_ARCADE) ? "ARCADE"
+                        : (rq_lbMode == RQ_MODE_MORT_SUBITE) ? "MORT SUBITE"
+                        : "ZEN";
+    int totalPages = (RQ_MAX_SCORES + 9) / 10;
+    int debut = rq_lbPage * 10;
+
+    minitel.newScreen();
+    rq_bandeau();
+    {
+        char titre[41];
+        sprintf(titre, "** %s **", nomMode);
+        int pad = (40 - (int)strlen(titre)) / 2;
+        if (pad < 0) pad = 0;
+        minitel.newXY(1 + pad, 3);
+        minitel.attributs(CARACTERE_JAUNE);
+        minitel.print(titre);
+        minitel.attributs(CARACTERE_BLANC);
+    }
+    rq_ligneH(4);
+    for (int i = 0; i < 10; i++) {
+        int idx = debut + i;
         minitel.newXY(1, 5 + i);
         char ligne[41];
-        sprintf(ligne, "   %2d.  %-8s    %4d pts",
-                i + 1, lb[i].pseudo, lb[i].points);
+        if (idx < RQ_MAX_SCORES) {
+            sprintf(ligne, "  %2d.  %-8s    %4d pts",
+                    idx + 1, lb[idx].pseudo, lb[idx].points);
+        } else {
+            strcpy(ligne, "");
+        }
         minitel.print(ligne);
     }
-    rq_pied("  SOMMAIRE ou CONNEXION/FIN = quitter");
+    {
+        char pg[41];
+        sprintf(pg, "  Page %d / %d", rq_lbPage + 1, totalPages);
+        minitel.newXY(1, 16);
+        minitel.print(pg);
+    }
+    minitel.newXY(1, 18);
+    minitel.attributs(CARACTERE_CYAN);
+    minitel.print("  Z=ZEN  A=ARCADE  M=MS (+ENVOI)");
+    if (totalPages > 1) {
+        minitel.newXY(1, 20);
+        minitel.print("  SUI=page suiv  RET=page prec");
+    }
+    minitel.attributs(CARACTERE_BLANC);
+    rq_pied("  SOMMAIRE = accueil");
     rq_etat = RQ_LEADERBOARD;
     currentEcran = "RQ_LEADERBOARD";
 }
@@ -336,10 +489,14 @@ void loopRetroquiz() {
                 break;
             case RQ_JEU:
                 champVide(12, 20, 1);
-                if (rq_mode == RQ_MODE_ARCADE) {
+                if (rq_mode == RQ_MODE_ARCADE || rq_mode == RQ_MODE_ZEN) {
+                    delay(rq_mode == RQ_MODE_ARCADE ? 1000 : 2000);
                     rq_questionStartTime = millis();
-                    rq_afficherTimerRestant(RQ_TEMPS_LIMITE_MS / 1000);
+                    rq_afficherBarreTimer(0, 36, rq_getTimeLimitMs());
                 }
+                break;
+            case RQ_LEADERBOARDS_NAV:
+                champVide(12, 16, 1);
                 break;
             case RQ_LEADERBOARD:
             case RQ_ADMIN_MENU:
@@ -350,8 +507,8 @@ void loopRetroquiz() {
         }
 
         Serial.println("RQ: avant wait_for_user_action, etat=" + String(rq_etat));
-        if (rq_etat == RQ_JEU && rq_mode == RQ_MODE_ARCADE) {
-            rq_attendreReponseAvecTimer();
+        if (rq_etat == RQ_JEU) {
+            rq_attendreReponseJeu();
         } else {
             wait_for_user_action();
         }
@@ -375,7 +532,7 @@ void loopRetroquiz() {
                 if (touche == ENVOI || touche == SUITE) {
                     Serial.println("RQ: ENVOI/SUITE, input=[" + input + "]");
                     if      (input == "1") rq_afficheSelectionMode();
-                    else if (input == "2") rq_afficheLeaderboard();
+                    else if (input == "2") rq_afficheLeaderboardsNav();
                 }
                 // SOMMAIRE depuis accueil : on ne quitte PAS
                 // (le Minitel pourrait en envoyer un parasite au lancement)
@@ -391,12 +548,7 @@ void loopRetroquiz() {
                 if (touche == ENVOI || touche == SUITE) {
                     if      (input == "1") { rq_mode = RQ_MODE_ZEN;         rq_demarrerPartie(); }
                     else if (input == "2") { rq_mode = RQ_MODE_ARCADE;      rq_demarrerPartie(); }
-                    else if (input == "3") {
-                        minitel.newXY(1, 19);
-                        minitel.attributs(CARACTERE_ROUGE);
-                        minitel.print("  BIENTOT DISPONIBLE !              ");
-                        minitel.attributs(CARACTERE_BLANC);
-                    }
+                    else if (input == "3") { rq_mode = RQ_MODE_MORT_SUBITE; rq_demarrerPartie(); }
                 }
                 break;
 
@@ -404,7 +556,8 @@ void loopRetroquiz() {
                 if (touche == CONNEXION_FIN) { Serial.println("RQ: CF->return"); return; }
                 if (touche == SOMMAIRE) { rq_afficheAccueil(); break; }
                 {
-                    bool valide = false;
+                    bool valide  = false;
+                    bool correct = false;
                     if (rq_timedOut) {
                         minitel.newXY(1, 21);
                         minitel.attributs(CARACTERE_ROUGE);
@@ -414,32 +567,34 @@ void loopRetroquiz() {
                         delay(1200);
                         valide = true;
                     } else if (touche == ENVOI || touche == SUITE) {
-                        if (input == "A" || input == "B" || input == "C" || input == "D") {
-                            rq_reponse = input.charAt(0);
+                        if (input == "1" || input == "2" || input == "3" || input == "4") {
+                            rq_reponse = 'A' + (input.charAt(0) - '1');
                             RQ_Question& q = rq_banque[rq_indices[rq_questionNum]];
-                            bool correct = (rq_reponse == q.bonneReponse);
+                            correct = (rq_reponse == q.bonneReponse);
                             int pts = 0;
-                            if (rq_mode == RQ_MODE_ZEN) {
+                            if (rq_mode == RQ_MODE_MORT_SUBITE) {
                                 if (correct) pts = 1;
                             } else {
-                                unsigned long elapsed = millis() - rq_questionStartTime;
-                                if (correct && elapsed < (unsigned long)RQ_TEMPS_LIMITE_MS)
-                                    pts = (int)((RQ_TEMPS_LIMITE_MS - elapsed) / 100);
+                                unsigned long elapsed  = millis() - rq_questionStartTime;
+                                unsigned long limitMs  = rq_getTimeLimitMs();
+                                unsigned long diviseur = (rq_mode == RQ_MODE_ZEN) ? 200UL : 100UL;
+                                if (correct && elapsed < limitMs)
+                                    pts = (int)((limitMs - elapsed) / diviseur);
                             }
                             minitel.newXY(1, 21);
                             if (correct) {
                                 rq_score += pts;
                                 minitel.attributs(CARACTERE_VERT);
                                 char msg[41];
-                                if (rq_mode == RQ_MODE_ZEN)
+                                if (rq_mode == RQ_MODE_MORT_SUBITE)
                                     sprintf(msg, "  BONNE REPONSE !                   ");
                                 else
-                                    sprintf(msg, "  BONNE REPONSE !  +%3d pts          ", pts);
+                                    sprintf(msg, "  BONNE REPONSE !  +%4d pts         ", pts);
                                 minitel.print(msg);
                             } else {
                                 minitel.attributs(CARACTERE_ROUGE);
                                 char msg[41];
-                                sprintf(msg, "  FAUX ! Rep : %c   (0 pt)           ", q.bonneReponse);
+                                sprintf(msg, "  FAUX ! Rep : %c   (0 pt)           ", '1' + (q.bonneReponse - 'A'));
                                 minitel.print(msg);
                             }
                             minitel.attributs(CARACTERE_BLANC);
@@ -450,15 +605,19 @@ void loopRetroquiz() {
                     }
                     if (valide) {
                         rq_questionNum++;
-                        if (rq_questionNum >= RQ_NB_QUESTIONS_PARTIE) {
+                        if (rq_mode == RQ_MODE_MORT_SUBITE && !correct)
+                            rq_questionNum = rq_nbQuestions;
+                        if (rq_questionNum >= rq_nbQuestions) {
                             minitel.newScreen();
                             rq_bandeau();
                             char sc[40];
                             if (rq_mode == RQ_MODE_ZEN)
-                                sprintf(sc, "Score : %d / %d", rq_score, RQ_NB_QUESTIONS_PARTIE);
+                                sprintf(sc, "Score : %d / %d pts", rq_score, 100 * rq_nbQuestions);
+                            else if (rq_mode == RQ_MODE_MORT_SUBITE)
+                                sprintf(sc, "Score : %d bonnes reponses", rq_score);
                             else
                                 sprintf(sc, "Score : %d / %d pts", rq_score,
-                                        (RQ_TEMPS_LIMITE_MS / 100) * RQ_NB_QUESTIONS_PARTIE);
+                                        100 * rq_nbQuestions);
                             rq_centrer(String(sc), 10);
                             minitel.newXY(1, 13);
                             minitel.print("  Pseudo (SUITE pour valider) :");
@@ -469,8 +628,10 @@ void loopRetroquiz() {
                             rq_saisir(5, 15, RQ_MAX_PSEUDO, rq_pseudo);
                             if (strlen(rq_pseudo) == 0) strcpy(rq_pseudo, "ANONYME");
                             RQ_Score lb[RQ_MAX_SCORES];
-                            rq_chargerLeaderboard(lb);
-                            rq_insererScore(lb, rq_pseudo, rq_score);
+                            rq_chargerLeaderboard(lb, rq_mode);
+                            rq_insererScore(lb, rq_pseudo, rq_score, rq_mode);
+                            rq_lbMode = rq_mode;
+                            rq_lbPage = 0;
                             rq_afficheLeaderboard();
                         } else {
                             rq_afficherQuestion(rq_questionNum);
@@ -479,10 +640,37 @@ void loopRetroquiz() {
                 }
                 break;
 
+            case RQ_LEADERBOARDS_NAV:
+                if (touche == CONNEXION_FIN) return;
+                if (touche == SOMMAIRE) { rq_afficheAccueil(); break; }
+                if (touche == ENVOI || touche == SUITE) {
+                    if      (input == "Z") { rq_lbMode = RQ_MODE_ZEN;         rq_lbPage = 0; rq_afficheLeaderboard(); }
+                    else if (input == "A") { rq_lbMode = RQ_MODE_ARCADE;      rq_lbPage = 0; rq_afficheLeaderboard(); }
+                    else if (input == "M") { rq_lbMode = RQ_MODE_MORT_SUBITE; rq_lbPage = 0; rq_afficheLeaderboard(); }
+                }
+                break;
+
             case RQ_LEADERBOARD:
-                if (touche == CONNEXION_FIN) { Serial.println("RQ: CF->return"); return; }
-                if (touche == SOMMAIRE || touche == ENVOI || touche == SUITE) {
-                    rq_afficheAccueil();
+                if (touche == CONNEXION_FIN) return;
+                if (touche == SOMMAIRE) { rq_afficheAccueil(); break; }
+                if (touche == SUITE) {
+                    if (rq_lbPage < (RQ_MAX_SCORES + 9) / 10 - 1) {
+                        rq_lbPage++;
+                        rq_afficheLeaderboard();
+                    }
+                    break;
+                }
+                if (touche == RETOUR) {
+                    if (rq_lbPage > 0) {
+                        rq_lbPage--;
+                        rq_afficheLeaderboard();
+                    }
+                    break;
+                }
+                if (touche == ENVOI) {
+                    if      (input == "Z") { rq_lbMode = RQ_MODE_ZEN;         rq_lbPage = 0; rq_afficheLeaderboard(); }
+                    else if (input == "A") { rq_lbMode = RQ_MODE_ARCADE;      rq_lbPage = 0; rq_afficheLeaderboard(); }
+                    else if (input == "M") { rq_lbMode = RQ_MODE_MORT_SUBITE; rq_lbPage = 0; rq_afficheLeaderboard(); }
                 }
                 break;
 
