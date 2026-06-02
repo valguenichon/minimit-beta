@@ -641,7 +641,7 @@ static void rq_afficheLeaderboard() {
     }
     minitel.newXY(1, 18);
     minitel.attributs(CARACTERE_CYAN);
-    minitel.print("  Z=ZEN  A=ARCADE  M=MS (+ENVOI)");
+    minitel.print("  Z=ZEN  A=ARCADE  M=MS  J=Rejouer");
     if (totalPages > 1) {
         minitel.newXY(1, 20);
         minitel.print("  SUI=page suiv  RET=page prec");
@@ -885,6 +885,7 @@ void loopRetroquiz() {
                     if      (input == "Z") { rq_lbMode = RQ_MODE_ZEN;         rq_lbPage = 0; rq_afficheLeaderboard(); }
                     else if (input == "A") { rq_lbMode = RQ_MODE_ARCADE;      rq_lbPage = 0; rq_afficheLeaderboard(); }
                     else if (input == "M") { rq_lbMode = RQ_MODE_MORT_SUBITE; rq_lbPage = 0; rq_afficheLeaderboard(); }
+                    else if (input == "J") { rq_demarrerPartie(); }
                 }
                 break;
 

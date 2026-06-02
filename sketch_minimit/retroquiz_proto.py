@@ -403,7 +403,7 @@ def afficher_leaderboard(mode, page):
         print()
         print(f"  Page {page+1} / {total_pages}")
         print()
-        print(c("  Z=ZEN  A=ARCADE  M=MS", CYAN))
+        print(c("  Z=ZEN  A=ARCADE  M=MS  J=Rejouer", CYAN))
         if total_pages > 1:
             print(c("  -> page suiv   <- page prec", CYAN))
         print()
@@ -424,6 +424,9 @@ def afficher_leaderboard(mode, page):
             mode, page = MODE_ARCADE, 0
         elif ch == "M":
             mode, page = MODE_MORT_SUBITE, 0
+        elif ch == "J":
+            demarrer_partie(charger_questions(), mode)
+            return
 
 # ── Navigation leaderboards ───────────────────────────────────────────────────
 def afficher_nav_leaderboards():
