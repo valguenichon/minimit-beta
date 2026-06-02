@@ -301,7 +301,7 @@ static void rq_afficheAccueil() {
     minitel.attributs(CARACTERE_VERT);
     minitel.print("  [ 1 ]  JOUER AU QUIZ");
     minitel.newXY(1, 14);
-    minitel.print("  [ 2 ]  LEADERBOARDS");
+    minitel.print("  [ 2 ]  CLASSEMENTS");
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 17);
     minitel.print("  Tapez votre choix puis ENVOI");
@@ -372,7 +372,7 @@ static void rq_afficheLeaderboardsNav() {
     rq_bandeau();
     minitel.newXY(1, 5);
     minitel.attributs(CARACTERE_CYAN);
-    rq_centrer("** LEADERBOARDS **", 5);
+    rq_centrer("** CLASSEMENTS **", 5);
     minitel.attributs(CARACTERE_BLANC);
     rq_ligneH(7, '=');
     minitel.newXY(1, 9);
