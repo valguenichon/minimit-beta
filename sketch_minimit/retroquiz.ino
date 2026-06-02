@@ -289,6 +289,7 @@ static unsigned long rq_saisir(int x, int y, int maxLen,
 // ECRAN ACCUEIL
 // ============================================================
 static void rq_afficheAccueil() {
+    rq_totalBanque = rq_chargerQuestions(rq_banque);
     minitel.newScreen();
     rq_bandeau();
     minitel.newXY(1, 5);
@@ -308,6 +309,12 @@ static void rq_afficheAccueil() {
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 19);
     minitel.print("Tapez votre choix puis ENVOI");
+    minitel.newXY(1, 21);
+    minitel.attributs(CARACTERE_CYAN);
+    char nbq[41];
+    sprintf(nbq, "%d questions disponibles", rq_totalBanque);
+    minitel.print(nbq);
+    minitel.attributs(CARACTERE_BLANC);
     rq_pied("CONNEXION/FIN pour quitter");
     rq_etat = RQ_ACCUEIL;
     currentEcran = "RQ_ACCUEIL";
