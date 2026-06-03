@@ -286,10 +286,7 @@ def jouer_question_zen(enonce, choix, bonne, num, total=None):
 
         if bar_width != dernier_bar_width:
             dernier_bar_width = bar_width
-            ind = saisie if saisie else ' '
-            sys.stdout.write(
-                f"\r  [{ind}]{_barre_timer(elapsed_ms, TEMPS_LIMITE_ZEN_MS)}  ENTREE=valider  "
-            )
+            sys.stdout.write(f"\r{_barre_timer(elapsed_ms, TEMPS_LIMITE_ZEN_MS)}")
             sys.stdout.flush()
 
         if elapsed_ms >= TEMPS_LIMITE_ZEN_MS:
@@ -300,14 +297,30 @@ def jouer_question_zen(enonce, choix, bonne, num, total=None):
             ch = lire_touche()
             if ch in "1234":
                 saisie = ch
-                sys.stdout.write("\n")
+                # Pas de highlight pendant la saisie, juste update de [ind] dans la barre
+            elif ch in ("\r", "\n") and saisie:
+                print()
+                highlight_reponse(saisie, choix)  # Highlight seulement à la validation
+                return saisie, int((time.perf_counter() - t0) * 1000)
+
+        time.sleep(0.03)
+
+def jouer_question_survie(enonce, choix, bonne, num, total=None):
+    afficher_question(enonce, choix, num, MODE_SURVIE, total=total)
+    saisie = ""
+    vider_buffer()
+
+    while True:
+        if msvcrt.kbhit():
+            ch = lire_touche()
+            if ch in "1234":
+                saisie = ch
                 highlight_reponse(ch, choix)
-                sys.stdout.write("\033[A")
+                sys.stdout.write("\033[2A\r")
                 sys.stdout.flush()
             elif ch in ("\r", "\n") and saisie:
                 print()
-                return saisie, int((time.perf_counter() - t0) * 1000)
-
+                return saisie, 0  # pas de timing en survie
         time.sleep(0.03)
 
 # ── Partie ────────────────────────────────────────────────────────────────────
@@ -333,8 +346,11 @@ def demarrer_partie(questions, mode):
         if mode == MODE_ARCADE:
             digit, elapsed_ms = jouer_question_arcade(enonce, choix, bonne, i + 1)
             reponse = DIGIT_TO_LETTRE.get(digit) if digit else None
-        else:
+        elif mode == MODE_ZEN:
             digit, elapsed_ms = jouer_question_zen(enonce, choix, bonne, i + 1, total=nb_total)
+            reponse = DIGIT_TO_LETTRE.get(digit) if digit else None
+        else:  # MODE_SURVIE
+            digit, elapsed_ms = jouer_question_survie(enonce, choix, bonne, i + 1, total=nb_total)
             reponse = DIGIT_TO_LETTRE.get(digit) if digit else None
 
         if reponse is None:
