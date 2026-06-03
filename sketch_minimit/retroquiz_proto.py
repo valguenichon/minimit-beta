@@ -185,8 +185,9 @@ def afficher_question(enonce, choix, num, mode, total=None):
     print()
     ligne_h()
     sys.stdout.flush()
-    # 2. Pause lecture 2s
-    time.sleep(2.0)
+    # 2. Pause lecture (sauf SURVIE)
+    if mode != MODE_SURVIE:
+        time.sleep(2.0)
     # 3. Choix 2 lignes × 2 colonnes + instruction
     for row in range(2):
         idxL = row * 2
