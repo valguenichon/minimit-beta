@@ -18,7 +18,7 @@
 
 #define RQ_MODE_ZEN         0
 #define RQ_MODE_ARCADE      1
-#define RQ_MODE_MORT_SUBITE 2
+#define RQ_MODE_SURVIE 2
 
 #define RQ_TEMPS_LIMITE_ZEN_MS 20000
 
@@ -228,7 +228,7 @@ static void rq_attendreReponseJeu() {
                 return;
             }
         }
-        unsigned long k = (rq_mode == RQ_MODE_MORT_SUBITE)
+        unsigned long k = (rq_mode == RQ_MODE_SURVIE)
                           ? minitel.getKeyCode()
                           : minitel.getKeyCode(false);
         if (k == 0) continue;
@@ -383,7 +383,7 @@ static void rq_afficheAdminReset() {
     minitel.newXY(1, 10);
     minitel.print(""); minitel.attributs(DEBUT_LIGNAGE); minitel.print("A"); minitel.attributs(FIN_LIGNAGE); minitel.print("RCADE");
     minitel.newXY(1, 12);
-    minitel.print(""); minitel.attributs(DEBUT_LIGNAGE); minitel.print("M"); minitel.attributs(FIN_LIGNAGE); minitel.print("ORT SUBITE");
+    minitel.print(""); minitel.attributs(DEBUT_LIGNAGE); minitel.print("S"); minitel.attributs(FIN_LIGNAGE); minitel.print("URVIE");
     minitel.newXY(1, 14);
     minitel.print(""); minitel.attributs(DEBUT_LIGNAGE); minitel.print("T"); minitel.attributs(FIN_LIGNAGE); minitel.print("OUS");
     minitel.attributs(CARACTERE_BLANC);
@@ -546,7 +546,7 @@ static void rq_afficheSelectionMode() {
     minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("A"); minitel.attributs(FIN_LIGNAGE); minitel.print("RCADE - 10s par question");
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 13);
-    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("M"); minitel.attributs(FIN_LIGNAGE); minitel.print("ORT SUBITE - survie !");
+    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("S"); minitel.attributs(FIN_LIGNAGE); minitel.print("URVIE");
     minitel.newXY(1, 16);
     minitel.print("  Tapez votre choix puis ENVOI");
     rq_pied("  SOMMAIRE = accueil");
@@ -557,7 +557,7 @@ static void rq_afficheSelectionMode() {
 static void rq_demarrerPartie() {
     rq_totalBanque = rq_chargerQuestions(rq_banque);
     Serial.println("RQ: questions chargees=" + String(rq_totalBanque));
-    if (rq_mode == RQ_MODE_MORT_SUBITE) {
+    if (rq_mode == RQ_MODE_SURVIE) {
         rq_nbQuestions = rq_totalBanque;
     } else {
         rq_nbQuestions = RQ_NB_QUESTIONS_PARTIE;
@@ -599,7 +599,7 @@ static void rq_afficheLeaderboardsNav() {
     minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("A"); minitel.attributs(FIN_LIGNAGE); minitel.print("RCADE - rapidité");
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 13);
-    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("M"); minitel.attributs(FIN_LIGNAGE); minitel.print("ORT SUBITE - survie");
+    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("S"); minitel.attributs(FIN_LIGNAGE); minitel.print("URVIE - survie");
     minitel.newXY(1, 16);
     minitel.print("  Tapez Z, A ou M puis ENVOI");
     rq_pied("  SOMMAIRE = accueil");
@@ -612,7 +612,7 @@ static void rq_afficheLeaderboard() {
     rq_chargerLeaderboard(lb, rq_lbMode);
 
     const char* nomMode = (rq_lbMode == RQ_MODE_ARCADE) ? "ARCADE"
-                        : (rq_lbMode == RQ_MODE_MORT_SUBITE) ? "MORT SUBITE"
+                        : (rq_lbMode == RQ_MODE_SURVIE) ? "SURVIE"
                         : "ZEN";
     int totalPages = (RQ_MAX_SCORES + 9) / 10;
     int debut = rq_lbPage * 10;
@@ -771,7 +771,7 @@ void loopRetroquiz() {
                 if (touche == ENVOI || touche == SUITE) {
                     if      (input == "Z") { rq_mode = RQ_MODE_ZEN;         rq_demarrerPartie(); }
                     else if (input == "A") { rq_mode = RQ_MODE_ARCADE;      rq_demarrerPartie(); }
-                    else if (input == "M") { rq_mode = RQ_MODE_MORT_SUBITE; rq_demarrerPartie(); }
+                    else if (input == "S") { rq_mode = RQ_MODE_SURVIE; rq_demarrerPartie(); }
                 }
                 break;
 
@@ -795,7 +795,7 @@ void loopRetroquiz() {
                             RQ_Question& q = rq_banque[rq_indices[rq_questionNum]];
                             correct = (rq_reponse == q.bonneReponse);
                             int pts = 0;
-                            if (rq_mode == RQ_MODE_MORT_SUBITE) {
+                            if (rq_mode == RQ_MODE_SURVIE) {
                                 if (correct) pts = 1;
                             } else {
                                 unsigned long elapsed  = millis() - rq_questionStartTime;
@@ -809,7 +809,7 @@ void loopRetroquiz() {
                                 rq_score += pts;
                                 minitel.attributs(CARACTERE_VERT);
                                 char msg[41];
-                                if (rq_mode == RQ_MODE_MORT_SUBITE)
+                                if (rq_mode == RQ_MODE_SURVIE)
                                     sprintf(msg, "  BONNE REPONSE !                   ");
                                 else
                                     sprintf(msg, "  BONNE REPONSE !  +%4d pts         ", pts);
@@ -828,7 +828,7 @@ void loopRetroquiz() {
                     }
                     if (valide) {
                         rq_questionNum++;
-                        if (rq_mode == RQ_MODE_MORT_SUBITE && !correct)
+                        if (rq_mode == RQ_MODE_SURVIE && !correct)
                             rq_questionNum = rq_nbQuestions;
                         if (rq_questionNum >= rq_nbQuestions) {
                             minitel.newScreen();
@@ -836,7 +836,7 @@ void loopRetroquiz() {
                             char sc[40];
                             if (rq_mode == RQ_MODE_ZEN)
                                 sprintf(sc, "Score : %d / %d pts", rq_score, 100 * rq_nbQuestions);
-                            else if (rq_mode == RQ_MODE_MORT_SUBITE)
+                            else if (rq_mode == RQ_MODE_SURVIE)
                                 sprintf(sc, "Score : %d bonnes reponses", rq_score);
                             else
                                 sprintf(sc, "Score : %d / %d pts", rq_score,
@@ -869,7 +869,7 @@ void loopRetroquiz() {
                 if (touche == ENVOI || touche == SUITE) {
                     if      (input == "Z") { rq_lbMode = RQ_MODE_ZEN;         rq_lbPage = 0; rq_afficheLeaderboard(); }
                     else if (input == "A") { rq_lbMode = RQ_MODE_ARCADE;      rq_lbPage = 0; rq_afficheLeaderboard(); }
-                    else if (input == "M") { rq_lbMode = RQ_MODE_MORT_SUBITE; rq_lbPage = 0; rq_afficheLeaderboard(); }
+                    else if (input == "S") { rq_lbMode = RQ_MODE_SURVIE; rq_lbPage = 0; rq_afficheLeaderboard(); }
                 }
                 break;
 
@@ -893,7 +893,7 @@ void loopRetroquiz() {
                 if (touche == ENVOI) {
                     if      (input == "Z") { rq_lbMode = RQ_MODE_ZEN;         rq_lbPage = 0; rq_afficheLeaderboard(); }
                     else if (input == "A") { rq_lbMode = RQ_MODE_ARCADE;      rq_lbPage = 0; rq_afficheLeaderboard(); }
-                    else if (input == "M") { rq_lbMode = RQ_MODE_MORT_SUBITE; rq_lbPage = 0; rq_afficheLeaderboard(); }
+                    else if (input == "S") { rq_lbMode = RQ_MODE_SURVIE; rq_lbPage = 0; rq_afficheLeaderboard(); }
                     else if (input == "J") { rq_demarrerPartie(); }
                 }
                 break;
@@ -915,7 +915,7 @@ void loopRetroquiz() {
                     int modeReset = -1;
                     if      (input == "Z") modeReset = RQ_MODE_ZEN;
                     else if (input == "A") modeReset = RQ_MODE_ARCADE;
-                    else if (input == "M") modeReset = RQ_MODE_MORT_SUBITE;
+                    else if (input == "S") modeReset = RQ_MODE_SURVIE;
                     if (modeReset >= 0) {
                         rq_reinitialiserLeaderboard(modeReset);
                     } else if (input == "T") {

@@ -27,11 +27,11 @@ SCORES_FICHIER = {
     1: BASE_DIR / "rq_scores_arc.json",
     2: BASE_DIR / "rq_scores_ms.json",
 }
-NOM_MODE = {0: "ZEN", 1: "ARCADE", 2: "MORT SUBITE"}
+NOM_MODE = {0: "ZEN", 1: "ARCADE", 2: "SURVIE"}
 
-MODE_ZEN         = 0
-MODE_ARCADE      = 1
-MODE_MORT_SUBITE = 2
+MODE_ZEN    = 0
+MODE_ARCADE = 1
+MODE_SURVIE = 2
 
 # ── ANSI ──────────────────────────────────────────────────────────────────────
 def _activer_ansi():
@@ -312,7 +312,7 @@ def jouer_question_zen(enonce, choix, bonne, num, total=None):
 
 # ── Partie ────────────────────────────────────────────────────────────────────
 def demarrer_partie(questions, mode):
-    if mode == MODE_MORT_SUBITE:
+    if mode == MODE_SURVIE:
         tirage   = random.sample(questions, len(questions))
         nb_total = len(questions)
     else:
@@ -356,7 +356,7 @@ def demarrer_partie(questions, mode):
         else:
             print(c(f"  FAUX ! Bonne rep : {bonne_digit}   (0 pt)", ROUGE))
             time.sleep(1.3)
-            if mode == MODE_MORT_SUBITE:
+            if mode == MODE_SURVIE:
                 break  # fin immediatediate a la premiere mauvaise reponse
 
     # Fin de partie
@@ -368,7 +368,7 @@ def demarrer_partie(questions, mode):
         centrer_raw(f"Score : {score} / {100 * nb_total} pts", JAUNE)
     elif mode == MODE_ZEN:
         centrer_raw(f"Score : {score} / {100 * nb_total} pts", JAUNE)
-    elif mode == MODE_MORT_SUBITE:
+    elif mode == MODE_SURVIE:
         centrer_raw(f"Score : {score} bonnes reponses", JAUNE)
     print()
     print()
@@ -403,16 +403,16 @@ def afficher_leaderboard(mode, page):
         print()
         print(f"  Page {page+1} / {total_pages}")
         print()
-        print(c("  Z=ZEN  A=ARCADE  M=MS  J=Rejouer", CYAN))
+        print(c("  Z=ZEN  A=ARCADE  S=SURVIE  J=Rejouer", CYAN))
         if total_pages > 1:
             print(c("  -> page suiv   <- page prec", CYAN))
         print()
         ligne_h()
-        print(c("  S = accueil", CYAN))
+        print(c("  0 = accueil", CYAN))
 
         ch = attendre_touche()
 
-        if ch == "S":
+        if ch == "0":
             return
         elif ch == "SUITE" and page < total_pages - 1:
             page += 1
@@ -422,8 +422,8 @@ def afficher_leaderboard(mode, page):
             mode, page = MODE_ZEN, 0
         elif ch == "A":
             mode, page = MODE_ARCADE, 0
-        elif ch == "M":
-            mode, page = MODE_MORT_SUBITE, 0
+        elif ch == "S":
+            mode, page = MODE_SURVIE, 0
         elif ch == "J":
             demarrer_partie(charger_questions(), mode)
             return
@@ -442,12 +442,12 @@ def afficher_nav_leaderboards():
         print()
         print("  " + c("A", VERT, 4) + c("RCADE    - scores par rapidite", VERT))
         print()
-        print("  " + c("M", VERT, 4) + c("ORT SUBITE - survie", VERT))
+        print("  " + c("S", VERT, 4) + c("URVIE - survie", VERT))
         print()
         print()
-        print("  Tapez Z, A ou M")
+        print("  Tapez Z, A ou S")
         ligne_h()
-        print(c("  S = accueil", CYAN))
+        print(c("  0 = accueil", CYAN))
 
         ch = attendre_touche()
         if ch == "Z":
@@ -456,10 +456,10 @@ def afficher_nav_leaderboards():
         elif ch == "A":
             afficher_leaderboard(MODE_ARCADE, 0)
             return
-        elif ch == "M":
-            afficher_leaderboard(MODE_MORT_SUBITE, 0)
-            return
         elif ch == "S":
+            afficher_leaderboard(MODE_SURVIE, 0)
+            return
+        elif ch == "0":
             return
 
 # ── Selection de mode ─────────────────────────────────────────────────────────
@@ -476,21 +476,21 @@ def afficher_selection_mode():
         print()
         print("  " + c("A", VERT, 4) + c("RCADE    - 10s par question !", VERT))
         print()
-        print("  " + c("M", VERT, 4) + c("ORT SUBITE - survie jusqu'a l'erreur", VERT))
+        print("  " + c("S", VERT, 4) + c("URVIE", VERT))
         print()
         print()
         print("  Tapez votre choix")
         ligne_h()
-        print(c("  S = accueil", CYAN))
+        print(c("  0 = accueil", CYAN))
 
         ch = attendre_touche()
         if ch == "Z":
             return MODE_ZEN
         elif ch == "A":
             return MODE_ARCADE
-        elif ch == "M":
-            return MODE_MORT_SUBITE
         elif ch == "S":
+            return MODE_SURVIE
+        elif ch == "0":
             return None
 
 # ── Admin ─────────────────────────────────────────────────────────────────────
@@ -546,13 +546,13 @@ def afficher_admin_reset():
         print()
         print("  Tapez votre choix")
         ligne_h()
-        print(c("  S = menu admin", CYAN))
+        print(c("  0 = menu admin", CYAN))
         ch = attendre_touche()
-        if ch == "S":
+        if ch == "0":
             return
         modes_map = {"Z": [MODE_ZEN], "A": [MODE_ARCADE],
-                     "M": [MODE_MORT_SUBITE],
-                     "T": [MODE_ZEN, MODE_ARCADE, MODE_MORT_SUBITE]}
+                     "S": [MODE_SURVIE],
+                     "T": [MODE_ZEN, MODE_ARCADE, MODE_SURVIE]}
         if ch in modes_map:
             vide = [{"pseudo": "---", "points": 0} for _ in range(MAX_SCORES)]
             for m in modes_map[ch]:
@@ -585,9 +585,9 @@ def afficher_admin_liste():
         print(f"  Page {page+1}/{total_pages}  ({len(questions)} questions)")
         print()
         ligne_h()
-        print(c("  S=menu  ->=suiv  <=prec  chiffre=selectionner", CYAN))
+        print(c("  0=menu  ->=suiv  <=prec  chiffre=selectionner", CYAN))
         ch = attendre_touche()
-        if ch == "S":
+        if ch == "0":
             return
         elif ch == "SUITE" and page < total_pages - 1:
             page += 1
@@ -703,9 +703,9 @@ def afficher_admin_menu():
         print()
         print("  Tapez votre choix")
         ligne_h()
-        print(c("  S = accueil", CYAN))
+        print(c("  0 = accueil", CYAN))
         ch = attendre_touche()
-        if ch == "S":
+        if ch == "0":
             return
         elif ch == "1":
             afficher_admin_reset()
