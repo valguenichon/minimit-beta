@@ -761,10 +761,8 @@ void loopRetroquiz() {
         // Champ de saisie selon l'etat
         switch (rq_etat) {
             case RQ_ACCUEIL:
-                champVide(12, 17, 1);
                 break;
             case RQ_SELECTION_MODE:
-                champVide(12, 16, 1);
                 break;
             case RQ_JEU:
                 champVide(1, 22, 1);
