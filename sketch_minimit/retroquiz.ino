@@ -202,7 +202,7 @@ static void rq_afficherBarreTimer(unsigned long elapsed, int barWidth, unsigned 
     for (int i = 0; i < barWidth; i++) minitel.print(" ");
     minitel.attributs(FOND_NOIR);
     minitel.attributs(CARACTERE_BLANC);
-    minitel.newXY(12, 20);
+    minitel.newXY(1, 22);
     minitel.cursor();
 }
 
@@ -244,7 +244,7 @@ static void rq_attendreReponseJeu() {
             userInput = String(ch);
             lasttouche = k;
             touche = k;
-            minitel.newXY(12, 20);
+            minitel.newXY(1, 22);
             minitel.print(String(ch));
             rq_responseTime = millis();  // Capturer le temps AVANT l'inversion vidéo
             rq_highlightReponse(ch - '1');
@@ -707,7 +707,7 @@ void loopRetroquiz() {
                 champVide(12, 16, 1);
                 break;
             case RQ_JEU:
-                champVide(12, 20, 1);
+                champVide(1, 22, 1);
                 if (rq_mode == RQ_MODE_ARCADE || rq_mode == RQ_MODE_ZEN) {
                     delay(rq_mode == RQ_MODE_ARCADE ? 1000 : 2000);
                     rq_afficherBarreTimer(0, 36, rq_getTimeLimitMs());
