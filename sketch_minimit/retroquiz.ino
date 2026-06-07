@@ -235,6 +235,35 @@ static void rq_attendreAccueil() {
     }
 }
 
+static void rq_attendreSelectionMode() {
+    touche = 0;
+    userInput = "";
+    minitel.echo(false);
+    minitel.newXY(1, 22);
+    minitel.cursor();
+
+    while (true) {
+        unsigned long k = minitel.getKeyCode();
+        if (k == 0) continue;
+
+        if (k == CONNEXION_FIN || k == SOMMAIRE || k == RETOUR) {
+            touche = k;
+            lasttouche = k;
+            minitel.noCursor();
+            minitel.echo(true);
+            return;
+        } else if (k == 'Z' || k == 'z' || k == 'A' || k == 'a' || k == 'S' || k == 's') {
+            char ch = toupper((char)k);
+            userInput = String(ch);
+            lasttouche = k;
+            touche = k;
+            minitel.noCursor();
+            minitel.echo(true);
+            return;
+        }
+    }
+}
+
 static void rq_attendreReponseJeu() {
     rq_timedOut = false;
     touche = 0;
@@ -574,15 +603,15 @@ static void rq_afficheSelectionMode() {
     rq_ligneH(7, '=');
     minitel.newXY(1, 9);
     minitel.attributs(CARACTERE_VERT);
-    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("Z"); minitel.attributs(FIN_LIGNAGE); minitel.print("EN - Quiz classique");
+    minitel.print("  "); minitel.attributs(INVERSION_FOND); minitel.print("Z"); minitel.attributs(FOND_NORMAL); minitel.print("EN - classique");
     minitel.newXY(1, 11);
-    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("A"); minitel.attributs(FIN_LIGNAGE); minitel.print("RCADE - 10s par question");
+    minitel.print("  "); minitel.attributs(INVERSION_FOND); minitel.print("A"); minitel.attributs(FOND_NORMAL); minitel.print("RCADE - rapidité");
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 13);
-    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("S"); minitel.attributs(FIN_LIGNAGE); minitel.print("URVIE");
-    minitel.newXY(1, 16);
-    minitel.print("  Tapez votre choix puis ENVOI");
+    minitel.print("  "); minitel.attributs(INVERSION_FOND); minitel.print("S"); minitel.attributs(FOND_NORMAL); minitel.print("URVIE - survie");
     rq_pied("  SOMMAIRE = accueil");
+    minitel.newXY(1, 22);
+    minitel.cursor();
     rq_etat = RQ_SELECTION_MODE;
     currentEcran = "RQ_SELECTION_MODE";
 }
@@ -763,6 +792,8 @@ void loopRetroquiz() {
             rq_attendreReponseJeu();
         } else if (rq_etat == RQ_ACCUEIL) {
             rq_attendreAccueil();
+        } else if (rq_etat == RQ_SELECTION_MODE) {
+            rq_attendreSelectionMode();
         } else {
             wait_for_user_action();
         }
@@ -802,11 +833,11 @@ void loopRetroquiz() {
 
             case RQ_SELECTION_MODE:
                 if (touche == CONNEXION_FIN) return;
-                if (touche == SOMMAIRE) { rq_afficheAccueil(); break; }
-                if (touche == ENVOI || touche == SUITE) {
-                    if      (input == "Z") { rq_mode = RQ_MODE_ZEN;         rq_demarrerPartie(); }
-                    else if (input == "A") { rq_mode = RQ_MODE_ARCADE;      rq_demarrerPartie(); }
-                    else if (input == "S") { rq_mode = RQ_MODE_SURVIE; rq_demarrerPartie(); }
+                if (touche == SOMMAIRE || touche == RETOUR) { rq_afficheAccueil(); break; }
+                if (touche == 'Z' || touche == 'A' || touche == 'S') {
+                    if      (touche == 'Z') { rq_mode = RQ_MODE_ZEN;    rq_demarrerPartie(); }
+                    else if (touche == 'A') { rq_mode = RQ_MODE_ARCADE; rq_demarrerPartie(); }
+                    else if (touche == 'S') { rq_mode = RQ_MODE_SURVIE; rq_demarrerPartie(); }
                 }
                 break;
 
