@@ -369,7 +369,9 @@ def demarrer_partie(questions, mode):
             time.sleep(1.3)
         elif reponse == bonne:
             if mode == MODE_ARCADE:
-                pts = max(0, (TEMPS_LIMITE_MS - elapsed_ms) // 100)
+                pts = max(0, (TEMPS_LIMITE_MS - elapsed_ms) // 75)
+                if pts > 100:
+                    pts = 100  # Cap à 100 points
                 score += pts
                 print(c(f"  BONNE REPONSE !  +{pts:3d} pts", VERT))
             elif mode == MODE_ZEN:

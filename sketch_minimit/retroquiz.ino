@@ -40,6 +40,7 @@ static int           rq_mode               = RQ_MODE_ZEN;
 static int           rq_lbMode             = RQ_MODE_ZEN;
 static int           rq_lbPage             = 0;
 static int           rq_adminEditIdx       = 0;
+static unsigned long rq_responseTime       = 0;
 
 static unsigned long rq_getTimeLimitMs() {
     return (rq_mode == RQ_MODE_ZEN)
@@ -245,6 +246,7 @@ static void rq_attendreReponseJeu() {
             touche = k;
             minitel.newXY(12, 20);
             minitel.print(String(ch));
+            rq_responseTime = millis();  // Capturer le temps AVANT l'inversion vidéo
             rq_highlightReponse(ch - '1');
             if (rq_mode == RQ_MODE_ARCADE) {
                 touche = ENVOI;
@@ -708,8 +710,8 @@ void loopRetroquiz() {
                 champVide(12, 20, 1);
                 if (rq_mode == RQ_MODE_ARCADE || rq_mode == RQ_MODE_ZEN) {
                     delay(rq_mode == RQ_MODE_ARCADE ? 1000 : 2000);
-                    rq_questionStartTime = millis();
                     rq_afficherBarreTimer(0, 36, rq_getTimeLimitMs());
+                    rq_questionStartTime = millis();  // Chrono démarre APRÈS affichage
                 }
                 break;
             case RQ_LEADERBOARDS_NAV:
@@ -799,11 +801,13 @@ void loopRetroquiz() {
                             if (rq_mode == RQ_MODE_SURVIE) {
                                 if (correct) pts = 1;
                             } else {
-                                unsigned long elapsed  = millis() - rq_questionStartTime;
+                                unsigned long elapsed  = rq_responseTime - rq_questionStartTime;
                                 unsigned long limitMs  = rq_getTimeLimitMs();
-                                unsigned long diviseur = (rq_mode == RQ_MODE_ZEN) ? 200UL : 100UL;
-                                if (correct && elapsed < limitMs)
+                                unsigned long diviseur = (rq_mode == RQ_MODE_ZEN) ? 200UL : 75UL;
+                                if (correct && elapsed < limitMs) {
                                     pts = (int)((limitMs - elapsed) / diviseur);
+                                    if (pts > 100) pts = 100;  // Cap à 100 points
+                                }
                             }
                             minitel.newXY(1, 21);
                             if (correct) {
