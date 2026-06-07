@@ -177,29 +177,23 @@ static void rq_afficherQuestion(int numQ) {
         minitel.newXY(1, y);   minitel.print(buf1);
         minitel.newXY(1, y+1); minitel.print(buf2);
     }
-    minitel.newXY(1, 19);
-    if (rq_mode == RQ_MODE_ARCADE)
-        minitel.print("  Appuyez sur 1, 2, 3 ou 4          ");
-    else
-        minitel.print("  Tapez 1, 2, 3 ou 4 puis ENVOI     ");
-    rq_pied("  1/2/3/4 + ENVOI  RET=Abandonner");
+    rq_pied("  RET=Abandonner");
     rq_reponse = 0;
     currentEcran = "RQ_JEU";
 }
 
 static void rq_afficherBarreTimer(unsigned long elapsed, int barWidth, unsigned long limitMs) {
     int couleurFond;
-    unsigned long remaining = (elapsed < limitMs) ? limitMs - elapsed : 0;
-    if      (remaining > limitMs * 7 / 10) couleurFond = FOND_VERT;
-    else if (remaining > limitMs * 3 / 10) couleurFond = FOND_JAUNE;
-    else                                    couleurFond = FOND_ROUGE;
+    if      (elapsed < limitMs * 3 / 10) couleurFond = FOND_VERT;
+    else if (elapsed < limitMs * 7 / 10) couleurFond = FOND_JAUNE;
+    else                                  couleurFond = FOND_ROUGE;
 
     minitel.noCursor();
     minitel.newXY(3, 21);
-    minitel.attributs(FOND_NOIR);
-    for (int i = 0; i < 36 - barWidth; i++) minitel.print(" ");
     minitel.attributs(couleurFond);
     for (int i = 0; i < barWidth; i++) minitel.print(" ");
+    minitel.attributs(FOND_NOIR);
+    for (int i = 0; i < 36 - barWidth; i++) minitel.print(" ");
     minitel.attributs(FOND_NOIR);
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 22);
@@ -275,7 +269,7 @@ static void rq_attendreReponseJeu() {
         if (rq_mode == RQ_MODE_ARCADE || rq_mode == RQ_MODE_ZEN) {
             unsigned long elapsed = millis() - rq_questionStartTime;
             unsigned long remaining = (elapsed < limitMs) ? limitMs - elapsed : 0;
-            int barWidth = (int)(36L * (long)remaining / limitMs);
+            int barWidth = (int)(36L * (long)elapsed / limitMs);
             if (barWidth != dernierBarWidth) {
                 dernierBarWidth = barWidth;
                 rq_afficherBarreTimer(elapsed, barWidth, limitMs);
@@ -772,10 +766,9 @@ void loopRetroquiz() {
             case RQ_SELECTION_MODE:
                 break;
             case RQ_JEU:
-                champVide(1, 22, 1);
                 if (rq_mode == RQ_MODE_ARCADE || rq_mode == RQ_MODE_ZEN) {
                     if (rq_mode == RQ_MODE_ZEN) delay(2000);
-                    rq_afficherBarreTimer(0, 36, rq_getTimeLimitMs());
+                    rq_afficherBarreTimer(0, 0, rq_getTimeLimitMs());
                     rq_questionStartTime = millis();  // Chrono démarre APRÈS affichage
                 }
                 break;
