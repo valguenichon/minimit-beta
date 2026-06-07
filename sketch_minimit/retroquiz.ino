@@ -311,17 +311,17 @@ static void rq_afficheAccueil() {
     minitel.newScreen();
     checkScreen(RQ_VDT_ACCUEIL, 0, 0);
     // y=18 : JOUER | CLASSEMENTS en 2 colonnes
-    minitel.newXY(1, 18);
+    minitel.newXY(8, 18);
     minitel.attributs(CARACTERE_VERT);
-    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("J"); minitel.attributs(FIN_LIGNAGE); minitel.print("OUER");
-    minitel.newXY(21, 18);
-    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("C"); minitel.attributs(FIN_LIGNAGE); minitel.print("LASSEMENTS");
+    minitel.print("  "); minitel.attributs(INVERSION_FOND); minitel.print("J"); minitel.attributs(FOND_NORMAL); minitel.print("OUER");
+    minitel.newXY(20, 18);
+    minitel.print("  "); minitel.attributs(INVERSION_FOND); minitel.print("C"); minitel.attributs(FOND_NORMAL); minitel.print("LASSEMENTS");
     minitel.attributs(CARACTERE_BLANC);
     // y=23-24 : pied avec ADMIN à gauche, nb questions à droite
     rq_ligneH(23);
     minitel.newXY(1, 24);
     minitel.attributs(CARACTERE_CYAN);
-    minitel.print("  "); minitel.attributs(DEBUT_LIGNAGE); minitel.print("A"); minitel.attributs(FIN_LIGNAGE); minitel.print("DMIN");
+    minitel.print("  "); minitel.attributs(INVERSION_FOND); minitel.print("A"); minitel.attributs(FOND_NORMAL); minitel.print("DMIN");
     char nbq[21];
     sprintf(nbq, "%d questions", rq_totalBanque);
     minitel.newXY(40 - (int)strlen(nbq), 24);
@@ -750,7 +750,7 @@ void loopRetroquiz() {
                     Serial.println("RQ: CONNEXION_FIN -> return");
                     return;
                 }
-                if (touche == ENVOI || touche == SUITE) {
+                if (touche == ENVOI || touche == SUITE || input == "J" || input == "C" || input == "A") {
                     Serial.println("RQ: ENVOI/SUITE, input=[" + input + "]");
                     if      (input == "J") rq_afficheSelectionMode();
                     else if (input == "C") rq_afficheLeaderboardsNav();
