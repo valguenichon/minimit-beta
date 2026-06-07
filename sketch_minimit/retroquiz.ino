@@ -803,7 +803,7 @@ void loopRetroquiz() {
                             } else {
                                 unsigned long elapsed  = rq_responseTime - rq_questionStartTime;
                                 unsigned long limitMs  = rq_getTimeLimitMs();
-                                unsigned long diviseur = (rq_mode == RQ_MODE_ZEN) ? 200UL : 75UL;
+                                unsigned long diviseur = (rq_mode == RQ_MODE_ZEN) ? 200UL : 100UL;
                                 if (correct && elapsed < limitMs) {
                                     pts = (int)((limitMs - elapsed) / diviseur);
                                     if (pts > 100) pts = 100;  // Cap à 100 points
