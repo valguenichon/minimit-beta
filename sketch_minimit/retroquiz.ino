@@ -774,7 +774,7 @@ void loopRetroquiz() {
             case RQ_JEU:
                 champVide(1, 22, 1);
                 if (rq_mode == RQ_MODE_ARCADE || rq_mode == RQ_MODE_ZEN) {
-                    delay(rq_mode == RQ_MODE_ARCADE ? 1000 : 2000);
+                    if (rq_mode == RQ_MODE_ZEN) delay(2000);
                     rq_afficherBarreTimer(0, 36, rq_getTimeLimitMs());
                     rq_questionStartTime = millis();  // Chrono démarre APRÈS affichage
                 }
