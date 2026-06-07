@@ -364,6 +364,26 @@ static const String RQ_VDT_ACCUEIL =
     "1f,4e,4e,0e,1b,57,1b,40,50,1f,41,4e,0f,1b,5d,33,36,31,35,1b,5c,"
     "1f,4f,4a,50,72,65,73,73,20,53,74,61,72,74,20,52,65,74,72,6f,67,61,6d,69,6e,67";
 
+static const String RQ_VDT_SELECTION_MODE =
+    "1f,42,46,0e,1b,57,1b,40,49,2c,4c,2c,4c,4c,2c,4c,1b,50,1b,47,34,"
+    "1f,43,46,0e,1b,57,1b,40,4a,1b,50,1b,47,28,1b,57,1b,40,4a,42,1b,50,1b,47,34,1b,57,1b,40,4a,52,1b,50,1b,47,34,1b,57,1b,40,4a,"
+    "1f,44,46,0e,45,1b,57,1b,40,2c,1b,50,1b,47,51,1b,57,1b,40,2c,1b,50,1b,47,51,51,1b,57,1b,40,2c,1b,50,1b,47,50,25,"
+    "1f,45,42,0e,48,1b,57,1b,40,23,23,1b,50,1b,47,30,09,50,30,09,48,34,09,30,50,09,09,50,30,09,09,09,09,09,09,30,"
+    "1f,46,42,0e,4a,1b,57,1b,40,2a,21,1b,50,1b,47,25,1b,57,1b,40,21,2c,20,1b,50,1b,47,2a,1b,57,20,1b,40,50,1b,50,1b,47,2a,1b,57,20,1b,40,54,1b,50,1b,47,25,1b,57,1b,40,21,58,20,09,09,09,09,09,1b,50,1b,47,30,1b,57,1b,40,4a,1b,50,1b,47,30,"
+    "1f,47,42,0e,1b,57,20,1b,40,54,22,1b,50,1b,47,30,1b,57,1b,40,54,22,1b,50,1b,47,34,09,1b,57,1b,40,30,23,09,34,4a,09,30,23,58,09,09,09,09,09,1b,50,1b,47,22,1b,57,1b,40,58,"
+    "1f,48,42,0e,23,09,22,50,1b,57,1b,40,23,1b,50,1b,47,30,09,50,09,09,09,1b,57,1b,40,23,09,1b,50,1b,47,40,50,30,"
+    "1f,49,44,0e,4a,1b,57,1b,40,48,1b,50,1b,47,30,1b,57,20,1b,50,48,1b,57,1b,40,48,1b,50,1b,47,4a,1b,57,1b,40,4a,09,23,1b,50,1b,47,2a,1b,57,1b,40,38,40,1b,50,1b,47,21,09,09,09,09,09,09,1b,52,1b,40,41,50,1b,50,1b,42,34,1b,47,50,40,30,"
+    "1f,4a,44,0e,2a,1b,57,1b,40,22,20,1b,50,1b,47,31,2a,1b,57,1b,40,22,40,22,1b,50,1b,47,48,1b,57,1b,40,4a,1b,50,1b,47,48,1b,57,20,1b,40,23,1b,50,1b,47,34,09,09,09,09,09,09,1b,52,1b,40,40,26,4a,1b,57,42,1b,50,1b,47,4a,4a,"
+    "1f,4b,46,0e,22,1b,57,1b,40,58,09,09,09,09,09,09,09,09,09,09,09,09,09,09,09,09,1b,52,32,23,1b,50,1b,42,25,1b,47,23,22,22,"
+    "1f,4d,58,0e,1b,52,1b,40,21,30,1b,50,1b,42,34,1b,47,50,09,40,30,40,09,50,09,50,"
+    "1f,4e,58,0e,1b,52,1b,40,4a,1b,50,1b,42,25,1b,52,1b,40,4a,1b,57,2a,1b,50,1b,47,25,1b,57,1b,40,4a,09,2a,4a,12,42,42,"
+    "1f,4f,58,0e,1b,52,1b,40,32,22,1b,50,1b,42,25,1b,47,21,21,22,21,12,42,23,09,23,"
+    "1f,51,58,0e,1b,52,1b,40,21,50,1b,50,1b,42,34,1b,47,30,30,50,09,30,12,42,50,"
+    "1f,52,58,0e,1b,52,1b,40,22,44,4a,1b,57,12,42,2a,1b,50,1b,47,25,1b,57,1b,40,4a,12,42,42,"
+    "1f,53,58,0e,1b,52,1b,40,32,21,1b,50,1b,42,25,1b,47,22,09,21,21,23,09,21,23,0f,"
+    "1f,43,58,53,19,42,65,6c,65,63,74,69,6f,6e,6e,65,"
+    "1f,44,58,6c,65,20,6d,6f,64,65,20,64,65,20,6a,65,75";
+
 static void rq_afficheAccueil() {
     rq_totalBanque = rq_chargerQuestions(rq_banque);
     minitel.newScreen();
@@ -595,20 +615,7 @@ static void rq_adminAjouterQuestion() {
 // ============================================================
 static void rq_afficheSelectionMode() {
     minitel.newScreen();
-    rq_bandeau();
-    minitel.newXY(1, 5);
-    minitel.attributs(CARACTERE_CYAN);
-    rq_centrer("** CHOISISSEZ UN MODE **", 5);
-    minitel.attributs(CARACTERE_BLANC);
-    rq_ligneH(7, '=');
-    minitel.newXY(1, 9);
-    minitel.attributs(CARACTERE_VERT);
-    minitel.print("  "); minitel.attributs(INVERSION_FOND); minitel.print("Z"); minitel.attributs(FOND_NORMAL); minitel.print("EN - classique");
-    minitel.newXY(1, 11);
-    minitel.print("  "); minitel.attributs(INVERSION_FOND); minitel.print("A"); minitel.attributs(FOND_NORMAL); minitel.print("RCADE - rapidité");
-    minitel.attributs(CARACTERE_BLANC);
-    minitel.newXY(1, 13);
-    minitel.print("  "); minitel.attributs(INVERSION_FOND); minitel.print("S"); minitel.attributs(FOND_NORMAL); minitel.print("URVIE - survie");
+    checkScreen(RQ_VDT_SELECTION_MODE, 0, 0);
     rq_pied("  SOMMAIRE = accueil");
     minitel.newXY(1, 22);
     minitel.cursor();
