@@ -206,6 +206,35 @@ static void rq_afficherBarreTimer(unsigned long elapsed, int barWidth, unsigned 
     minitel.cursor();
 }
 
+static void rq_attendreAccueil() {
+    touche = 0;
+    userInput = "";
+    minitel.echo(false);
+    minitel.newXY(1, 22);
+    minitel.cursor();
+
+    while (true) {
+        unsigned long k = minitel.getKeyCode();
+        if (k == 0) continue;
+
+        if (k == CONNEXION_FIN || k == SOMMAIRE) {
+            touche = k;
+            lasttouche = k;
+            minitel.noCursor();
+            minitel.echo(true);
+            return;
+        } else if (k == 'J' || k == 'j' || k == 'C' || k == 'c' || k == 'A' || k == 'a') {
+            char ch = toupper((char)k);
+            userInput = String(ch);
+            lasttouche = k;
+            touche = k;
+            minitel.noCursor();
+            minitel.echo(true);
+            return;
+        }
+    }
+}
+
 static void rq_attendreReponseJeu() {
     rq_timedOut = false;
     touche = 0;
@@ -327,6 +356,8 @@ static void rq_afficheAccueil() {
     minitel.newXY(40 - (int)strlen(nbq), 24);
     minitel.print(nbq);
     minitel.attributs(CARACTERE_BLANC);
+    minitel.newXY(1, 22);
+    minitel.cursor();
     rq_etat = RQ_ACCUEIL;
     currentEcran = "RQ_ACCUEIL";
     Serial.println("RQ: accueil affiche, etat=" + String(rq_etat));
@@ -730,6 +761,8 @@ void loopRetroquiz() {
         Serial.println("RQ: avant wait_for_user_action, etat=" + String(rq_etat));
         if (rq_etat == RQ_JEU) {
             rq_attendreReponseJeu();
+        } else if (rq_etat == RQ_ACCUEIL) {
+            rq_attendreAccueil();
         } else {
             wait_for_user_action();
         }
@@ -750,11 +783,11 @@ void loopRetroquiz() {
                     Serial.println("RQ: CONNEXION_FIN -> return");
                     return;
                 }
-                if (touche == ENVOI || touche == SUITE || input == "J" || input == "C" || input == "A") {
-                    Serial.println("RQ: ENVOI/SUITE, input=[" + input + "]");
-                    if      (input == "J") rq_afficheSelectionMode();
-                    else if (input == "C") rq_afficheLeaderboardsNav();
-                    else if (input == "A") {
+                if (touche == 'J' || touche == 'C' || touche == 'A') {
+                    Serial.println("RQ: touche=[" + String((char)touche) + "]");
+                    if      (touche == 'J') rq_afficheSelectionMode();
+                    else if (touche == 'C') rq_afficheLeaderboardsNav();
+                    else if (touche == 'A') {
                         if (rq_adminSaisirMdp()) rq_afficheAdminMenu();
                         else rq_afficheAccueil();
                     }
