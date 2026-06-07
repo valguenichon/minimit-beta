@@ -22,12 +22,6 @@
 
 #define RQ_TEMPS_LIMITE_ZEN_MS 20000
 
-static unsigned long rq_getTimeLimitMs() {
-    return (rq_mode == RQ_MODE_ZEN)
-           ? (unsigned long)RQ_TEMPS_LIMITE_ZEN_MS
-           : (unsigned long)RQ_TEMPS_LIMITE_MS;
-}
-
 static int rq_etat = RQ_ACCUEIL;
 
 static RQ_Question rq_banque[RQ_MAX_BANQUE];
@@ -46,6 +40,12 @@ static int           rq_mode               = RQ_MODE_ZEN;
 static int           rq_lbMode             = RQ_MODE_ZEN;
 static int           rq_lbPage             = 0;
 static int           rq_adminEditIdx       = 0;
+
+static unsigned long rq_getTimeLimitMs() {
+    return (rq_mode == RQ_MODE_ZEN)
+           ? (unsigned long)RQ_TEMPS_LIMITE_ZEN_MS
+           : (unsigned long)RQ_TEMPS_LIMITE_MS;
+}
 
 // ============================================================
 // UTILITAIRES
@@ -181,7 +181,7 @@ static void rq_afficherQuestion(int numQ) {
         minitel.print("  Appuyez sur 1, 2, 3 ou 4          ");
     else
         minitel.print("  Tapez 1, 2, 3 ou 4 puis ENVOI     ");
-    rq_pied("  1/2/3/4 + ENVOI  SOM=Accueil");
+    rq_pied("  1/2/3/4 + ENVOI  RET=Abandonner");
     rq_reponse = 0;
     currentEcran = "RQ_JEU";
 }
@@ -232,7 +232,7 @@ static void rq_attendreReponseJeu() {
                           ? minitel.getKeyCode()
                           : minitel.getKeyCode(false);
         if (k == 0) continue;
-        if (k == CONNEXION_FIN || k == SOMMAIRE || k == SUITE || k == ENVOI) {
+        if (k == CONNEXION_FIN || k == SOMMAIRE || k == RETOUR || k == SUITE || k == ENVOI) {
             touche = k;
             lasttouche = k;
             minitel.noCursor();
@@ -778,6 +778,7 @@ void loopRetroquiz() {
             case RQ_JEU:
                 if (touche == CONNEXION_FIN) { Serial.println("RQ: CF->return"); return; }
                 if (touche == SOMMAIRE) { rq_afficheAccueil(); break; }
+                if (touche == RETOUR) { rq_afficheSelectionMode(); break; }
                 {
                     bool valide  = false;
                     bool correct = false;

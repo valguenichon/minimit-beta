@@ -255,6 +255,12 @@ static int rq_compterQuestionsLittleFS() {
     return count;
 }
 
+static const char* rq_namespacePourMode(int mode) {
+    if (mode == 1) return "rq_arc";
+    if (mode == 2) return "rq_ms";
+    return "rq_zen";
+}
+
 static void rq_initialiserLeaderboardPourMode(int mode) {
     const char* ns = rq_namespacePourMode(mode);
     Preferences prefs;
@@ -324,11 +330,6 @@ void rq_initialiserFichiers() {
 // LEADERBOARD
 // 3 namespaces NVS independants : rq_zen, rq_arc, rq_ms
 // ============================================================
-static const char* rq_namespacePourMode(int mode) {
-    if (mode == 1) return "rq_arc";
-    if (mode == 2) return "rq_ms";
-    return "rq_zen";
-}
 
 void rq_chargerLeaderboard(RQ_Score table[], int mode) {
     Preferences prefs;

@@ -204,6 +204,7 @@ def afficher_question(enonce, choix, num, mode, total=None):
     else:
         print("  Tapez 1, 2, 3 ou 4 puis ENTREE")
     print()
+    print(c("  R = Abandonner", CYAN))
 
 DIGIT_TO_LETTRE = {"1": "A", "2": "B", "3": "C", "4": "D"}
 LETTRE_TO_DIGIT = {v: k for k, v in DIGIT_TO_LETTRE.items()}
@@ -269,6 +270,8 @@ def jouer_question_arcade(enonce, choix, bonne, num):
                 print()
                 highlight_reponse(ch, choix)
                 return ch, int((time.perf_counter() - t0) * 1000)
+            elif ch.upper() == "R":
+                return None, -1  # Signal d'abandon
 
         time.sleep(0.03)
 
@@ -303,6 +306,8 @@ def jouer_question_zen(enonce, choix, bonne, num, total=None):
                 print()
                 highlight_reponse(saisie, choix)  # Highlight seulement à la validation
                 return saisie, int((time.perf_counter() - t0) * 1000)
+            elif ch.upper() == "R":
+                return None, -1  # Signal d'abandon
 
         time.sleep(0.03)
 
@@ -322,6 +327,8 @@ def jouer_question_survie(enonce, choix, bonne, num, total=None):
             elif ch in ("\r", "\n") and saisie:
                 print()
                 return saisie, 0  # pas de timing en survie
+            elif ch.upper() == "R":
+                return None, -1  # Signal d'abandon
         time.sleep(0.03)
 
 # ── Partie ────────────────────────────────────────────────────────────────────
@@ -346,13 +353,16 @@ def demarrer_partie(questions, mode):
 
         if mode == MODE_ARCADE:
             digit, elapsed_ms = jouer_question_arcade(enonce, choix, bonne, i + 1)
-            reponse = DIGIT_TO_LETTRE.get(digit) if digit else None
         elif mode == MODE_ZEN:
             digit, elapsed_ms = jouer_question_zen(enonce, choix, bonne, i + 1, total=nb_total)
-            reponse = DIGIT_TO_LETTRE.get(digit) if digit else None
         else:  # MODE_SURVIE
             digit, elapsed_ms = jouer_question_survie(enonce, choix, bonne, i + 1, total=nb_total)
-            reponse = DIGIT_TO_LETTRE.get(digit) if digit else None
+
+        # Abandon détecté
+        if elapsed_ms == -1:
+            return
+
+        reponse = DIGIT_TO_LETTRE.get(digit) if digit else None
 
         if reponse is None:
             print(c("  TEMPS ECOULE !  (0 pt)", ROUGE))
