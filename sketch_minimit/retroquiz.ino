@@ -182,18 +182,38 @@ static void rq_afficherQuestion(int numQ) {
     currentEcran = "RQ_JEU";
 }
 
-static void rq_afficherBarreTimer(unsigned long elapsed, int barWidth, unsigned long limitMs) {
+static void rq_afficherBarreTimer(unsigned long elapsed, int barWidth, unsigned long limitMs, bool reset = false) {
+    static int dernierBarWidth = -1;
+    static int derniereCouleur = -1;
+
+    // Si reset demandé, réinitialiser les variables statiques
+    if (reset) {
+        dernierBarWidth = -1;
+        derniereCouleur = -1;
+        return;
+    }
+
     int couleurFond;
     if      (elapsed < limitMs * 3 / 10) couleurFond = FOND_VERT;
     else if (elapsed < limitMs * 7 / 10) couleurFond = FOND_JAUNE;
     else                                  couleurFond = FOND_ROUGE;
 
     minitel.noCursor();
-    minitel.newXY(3, 21);
-    minitel.attributs(couleurFond);
-    for (int i = 0; i < barWidth; i++) minitel.print(" ");
-    minitel.attributs(FOND_NOIR);
-    for (int i = 0; i < 36 - barWidth; i++) minitel.print(" ");
+
+    // Afficher seulement le nouveau caractère si la barre progresse
+    if (barWidth > dernierBarWidth) {
+        minitel.newXY(3 + barWidth - 1, 21);
+        minitel.attributs(couleurFond);
+        minitel.print(" ");
+        derniereCouleur = couleurFond;
+    }
+    // Au premier appel (barWidth=0), initialiser
+    else if (dernierBarWidth == -1) {
+        derniereCouleur = couleurFond;
+    }
+
+    dernierBarWidth = barWidth;
+
     minitel.attributs(FOND_NOIR);
     minitel.attributs(CARACTERE_BLANC);
     minitel.newXY(1, 22);
@@ -269,7 +289,9 @@ static void rq_attendreReponseJeu() {
         if (rq_mode == RQ_MODE_ARCADE || rq_mode == RQ_MODE_ZEN) {
             unsigned long elapsed = millis() - rq_questionStartTime;
             unsigned long remaining = (elapsed < limitMs) ? limitMs - elapsed : 0;
-            int barWidth = (int)(36L * (long)elapsed / limitMs);
+            // Calcul amélioré avec arrondi pour une progression plus uniforme
+            int barWidth = (int)((36L * (long)elapsed + limitMs / 2) / limitMs);
+            if (barWidth > 36) barWidth = 36;  // Limiter à 36 caractères max
             if (barWidth != dernierBarWidth) {
                 dernierBarWidth = barWidth;
                 rq_afficherBarreTimer(elapsed, barWidth, limitMs);
@@ -767,9 +789,8 @@ void loopRetroquiz() {
                 break;
             case RQ_JEU:
                 if (rq_mode == RQ_MODE_ARCADE || rq_mode == RQ_MODE_ZEN) {
-                    if (rq_mode == RQ_MODE_ZEN) delay(2000);
-                    rq_afficherBarreTimer(0, 0, rq_getTimeLimitMs());
-                    rq_questionStartTime = millis();  // Chrono démarre APRÈS affichage
+                    rq_afficherBarreTimer(0, 0, rq_getTimeLimitMs(), true);  // Reset avec paramètre true
+                    rq_questionStartTime = millis();  // Chrono démarre immédiatement
                 }
                 break;
             case RQ_LEADERBOARDS_NAV:
@@ -889,7 +910,7 @@ void loopRetroquiz() {
                             }
                             minitel.attributs(CARACTERE_BLANC);
                             minitel.bip();
-                            delay(1200);
+                            delay(3000);
                             valide = true;
                         }
                     }
