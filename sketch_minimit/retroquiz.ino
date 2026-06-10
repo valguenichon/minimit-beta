@@ -157,6 +157,72 @@ static void rq_highlightReponse(int idx) {
     }
 }
 
+static void rq_afficherMauvaiseReponse(int idxUser, int idxBonne) {
+    RQ_Question& q = rq_banque[rq_indices[rq_questionNum]];
+
+    for (int row = 0; row < 2; row++) {
+        int idxL = row * 2;
+        int idxR = row * 2 + 1;
+        int y    = 9 + row * 3;
+        String l1L, l2L, l1R, l2R;
+        rq_splitChoix(q.choix[idxL], l1L, l2L);
+        rq_splitChoix(q.choix[idxR], l1R, l2R);
+        char b1L[21], b2L[21], b1R[21], b2R[21];
+        sprintf(b1L, "  %c/ %-15s", '1'+idxL, l1L.c_str());
+        sprintf(b2L, "     %-15s",            l2L.c_str());
+        sprintf(b1R, "  %c/ %-15s", '1'+idxR, l1R.c_str());
+        sprintf(b2R, "     %-15s",            l2R.c_str());
+
+        // Ligne 1 gauche
+        minitel.newXY(1, y);
+        if (idxL == idxBonne) {
+            minitel.attributs(FOND_VERT);
+            minitel.attributs(CARACTERE_BLANC);
+        } else if (idxL == idxUser) {
+            minitel.attributs(INVERSION_FOND);
+        }
+        minitel.print(b1L);
+        minitel.attributs(FOND_NOIR);
+        minitel.attributs(CARACTERE_BLANC);
+
+        // Ligne 1 droite
+        minitel.newXY(21, y);
+        if (idxR == idxBonne) {
+            minitel.attributs(FOND_VERT);
+            minitel.attributs(CARACTERE_BLANC);
+        } else if (idxR == idxUser) {
+            minitel.attributs(INVERSION_FOND);
+        }
+        minitel.print(b1R);
+        minitel.attributs(FOND_NOIR);
+        minitel.attributs(CARACTERE_BLANC);
+
+        // Ligne 2 gauche
+        minitel.newXY(1, y+1);
+        if (idxL == idxBonne) {
+            minitel.attributs(FOND_VERT);
+            minitel.attributs(CARACTERE_BLANC);
+        } else if (idxL == idxUser) {
+            minitel.attributs(INVERSION_FOND);
+        }
+        minitel.print(b2L);
+        minitel.attributs(FOND_NOIR);
+        minitel.attributs(CARACTERE_BLANC);
+
+        // Ligne 2 droite
+        minitel.newXY(21, y+1);
+        if (idxR == idxBonne) {
+            minitel.attributs(FOND_VERT);
+            minitel.attributs(CARACTERE_BLANC);
+        } else if (idxR == idxUser) {
+            minitel.attributs(INVERSION_FOND);
+        }
+        minitel.print(b2R);
+        minitel.attributs(FOND_NOIR);
+        minitel.attributs(CARACTERE_BLANC);
+    }
+}
+
 static void rq_afficherQuestion(int numQ) {
     RQ_Question& q = rq_banque[rq_indices[numQ]];
     minitel.newScreen();
@@ -979,37 +1045,23 @@ void loopRetroquiz() {
                                 minitel.attributs(CARACTERE_BLANC);
                                 minitel.bip();
                             } else {
-                                // Animation uniquement pour ZEN et ARCADE
-                                if (rq_mode == RQ_MODE_ZEN || rq_mode == RQ_MODE_ARCADE) {
-                                    // Retirer l'inversion de la réponse utilisateur
-                                    rq_highlightReponse(-1);
-
-                                    // Faire clignoter la bonne réponse 3 fois
-                                    int bonneIdx = q.bonneReponse - 'A';
-                                    for (int i = 0; i < 3; i++) {
-                                        rq_highlightReponse(bonneIdx);
-                                        delay(250);
-                                        rq_highlightReponse(-1);
-                                        delay(250);
-                                    }
-
-                                    // Afficher le message
-                                    minitel.newXY(1, 21);
-                                    minitel.attributs(CARACTERE_ROUGE);
-                                    minitel.print("  MAUVAISE REPONSE                    ");
-                                    minitel.attributs(CARACTERE_BLANC);
-                                } else {
-                                    // Mode SURVIE : comportement simplifié
-                                    minitel.newXY(1, 21);
-                                    minitel.attributs(CARACTERE_ROUGE);
-                                    minitel.print("  MAUVAISE REPONSE                    ");
-                                    minitel.attributs(CARACTERE_BLANC);
-                                }
-
-                                // Double bip pour tous les modes
+                                // 1. Double bip immédiat pour tous les modes
                                 minitel.bip();
                                 delay(200);
                                 minitel.bip();
+
+                                // 2. Afficher le message pour tous les modes
+                                minitel.newXY(1, 21);
+                                minitel.attributs(CARACTERE_ROUGE);
+                                minitel.print("  MAUVAISE REPONSE                    ");
+                                minitel.attributs(CARACTERE_BLANC);
+
+                                // 3. Afficher réponse user + bonne réponse (ZEN/ARCADE uniquement)
+                                if (rq_mode == RQ_MODE_ZEN || rq_mode == RQ_MODE_ARCADE) {
+                                    int userIdx = rq_reponse - 'A';
+                                    int bonneIdx = q.bonneReponse - 'A';
+                                    rq_afficherMauvaiseReponse(userIdx, bonneIdx);
+                                }
                             }
                             delay(3000);
                             valide = true;
