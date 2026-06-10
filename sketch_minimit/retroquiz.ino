@@ -138,20 +138,20 @@ static void rq_highlightReponse(int idx) {
         sprintf(b2R, "     %-15s",            l2R.c_str());
 
         minitel.newXY(1, y);
-        if (idxL == idx) minitel.attributs(INVERSION_FOND);
+        if (idx >= 0 && idxL == idx) minitel.attributs(INVERSION_FOND);
         minitel.print(b1L);
         minitel.attributs(FOND_NOIR); minitel.attributs(CARACTERE_BLANC);
         minitel.newXY(21, y);
-        if (idxR == idx) minitel.attributs(INVERSION_FOND);
+        if (idx >= 0 && idxR == idx) minitel.attributs(INVERSION_FOND);
         minitel.print(b1R);
         minitel.attributs(FOND_NOIR); minitel.attributs(CARACTERE_BLANC);
 
         minitel.newXY(1, y+1);
-        if (idxL == idx) minitel.attributs(INVERSION_FOND);
+        if (idx >= 0 && idxL == idx) minitel.attributs(INVERSION_FOND);
         minitel.print(b2L);
         minitel.attributs(FOND_NOIR); minitel.attributs(CARACTERE_BLANC);
         minitel.newXY(21, y+1);
-        if (idxR == idx) minitel.attributs(INVERSION_FOND);
+        if (idx >= 0 && idxR == idx) minitel.attributs(INVERSION_FOND);
         minitel.print(b2R);
         minitel.attributs(FOND_NOIR); minitel.attributs(CARACTERE_BLANC);
     }
@@ -193,23 +193,37 @@ static void rq_afficherBarreTimer(unsigned long elapsed, int barWidth, unsigned 
         return;
     }
 
+    // Calculer le temps restant et la couleur correspondante
+    unsigned long remaining = (elapsed < limitMs) ? limitMs - elapsed : 0;
     int couleurFond;
-    if      (elapsed < limitMs * 3 / 10) couleurFond = FOND_VERT;
-    else if (elapsed < limitMs * 7 / 10) couleurFond = FOND_JAUNE;
-    else                                  couleurFond = FOND_ROUGE;
+    if      (remaining > limitMs * 7 / 10) couleurFond = FOND_VERT;   // Plus de 70% restant
+    else if (remaining > limitMs * 3 / 10) couleurFond = FOND_JAUNE;  // Entre 30% et 70% restant
+    else                                    couleurFond = FOND_ROUGE;   // Moins de 30% restant
 
     minitel.noCursor();
 
-    // Afficher seulement le nouveau caractère si la barre progresse
-    if (barWidth > dernierBarWidth) {
-        minitel.newXY(3 + barWidth - 1, 21);
+    // Premier affichage : afficher la barre complète
+    if (dernierBarWidth == -1) {
+        minitel.newXY(3, 21);
         minitel.attributs(couleurFond);
-        minitel.print(" ");
+        for (int i = 0; i < 36; i++) minitel.print(" ");
+        derniereCouleur = couleurFond;
+        dernierBarWidth = 36;
+    }
+    // Changement de couleur : réafficher toute la barre restante
+    else if (couleurFond != derniereCouleur && barWidth > 0) {
+        minitel.newXY(3, 21);
+        minitel.attributs(couleurFond);
+        for (int i = 0; i < barWidth; i++) minitel.print(" ");
         derniereCouleur = couleurFond;
     }
-    // Au premier appel (barWidth=0), initialiser
-    else if (dernierBarWidth == -1) {
-        derniereCouleur = couleurFond;
+    // Décroissance : effacer les caractères de droite
+    else if (barWidth < dernierBarWidth) {
+        minitel.attributs(FOND_NOIR);
+        for (int i = barWidth; i < dernierBarWidth; i++) {
+            minitel.newXY(3 + i, 21);
+            minitel.print(" ");
+        }
     }
 
     dernierBarWidth = barWidth;
@@ -289,8 +303,8 @@ static void rq_attendreReponseJeu() {
         if (rq_mode == RQ_MODE_ARCADE || rq_mode == RQ_MODE_ZEN) {
             unsigned long elapsed = millis() - rq_questionStartTime;
             unsigned long remaining = (elapsed < limitMs) ? limitMs - elapsed : 0;
-            // Calcul amélioré avec arrondi pour une progression plus uniforme
-            int barWidth = (int)((36L * (long)elapsed + limitMs / 2) / limitMs);
+            // Calcul décroissant : basé sur le temps restant
+            int barWidth = (int)((36L * (long)remaining + limitMs / 2) / limitMs);
             if (barWidth > 36) barWidth = 36;  // Limiter à 36 caractères max
             if (barWidth != dernierBarWidth) {
                 dernierBarWidth = barWidth;
@@ -873,6 +887,8 @@ void loopRetroquiz() {
                         minitel.print("  TEMPS ECOULE !  (0 pt)            ");
                         minitel.attributs(CARACTERE_BLANC);
                         minitel.bip();
+                        delay(200);
+                        minitel.bip();
                         delay(1200);
                         valide = true;
                     } else if (touche == ENVOI || touche == SUITE) {
@@ -902,14 +918,41 @@ void loopRetroquiz() {
                                 else
                                     sprintf(msg, "  BONNE REPONSE !  +%4d pts         ", pts);
                                 minitel.print(msg);
+                                minitel.attributs(CARACTERE_BLANC);
+                                minitel.bip();
                             } else {
-                                minitel.attributs(CARACTERE_ROUGE);
-                                char msg[41];
-                                sprintf(msg, "  FAUX ! Rep : %c   (0 pt)           ", '1' + (q.bonneReponse - 'A'));
-                                minitel.print(msg);
+                                // Animation uniquement pour ZEN et ARCADE
+                                if (rq_mode == RQ_MODE_ZEN || rq_mode == RQ_MODE_ARCADE) {
+                                    // Retirer l'inversion de la réponse utilisateur
+                                    rq_highlightReponse(-1);
+
+                                    // Faire clignoter la bonne réponse 3 fois
+                                    int bonneIdx = q.bonneReponse - 'A';
+                                    for (int i = 0; i < 3; i++) {
+                                        rq_highlightReponse(bonneIdx);
+                                        delay(250);
+                                        rq_highlightReponse(-1);
+                                        delay(250);
+                                    }
+
+                                    // Afficher le message
+                                    minitel.newXY(1, 21);
+                                    minitel.attributs(CARACTERE_ROUGE);
+                                    minitel.print("  MAUVAISE REPONSE                    ");
+                                    minitel.attributs(CARACTERE_BLANC);
+                                } else {
+                                    // Mode SURVIE : comportement simplifié
+                                    minitel.newXY(1, 21);
+                                    minitel.attributs(CARACTERE_ROUGE);
+                                    minitel.print("  MAUVAISE REPONSE                    ");
+                                    minitel.attributs(CARACTERE_BLANC);
+                                }
+
+                                // Double bip pour tous les modes
+                                minitel.bip();
+                                delay(200);
+                                minitel.bip();
                             }
-                            minitel.attributs(CARACTERE_BLANC);
-                            minitel.bip();
                             delay(3000);
                             valide = true;
                         }
