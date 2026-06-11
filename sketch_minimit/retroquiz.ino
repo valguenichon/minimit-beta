@@ -177,7 +177,7 @@ static void rq_afficherMauvaiseReponse(int idxUser, int idxBonne) {
         minitel.newXY(1, y);
         if (idxL == idxBonne) {
             minitel.attributs(FOND_VERT);
-            minitel.attributs(CARACTERE_BLANC);
+            minitel.attributs(CARACTERE_NOIR);
         } else if (idxL == idxUser) {
             minitel.attributs(INVERSION_FOND);
         }
@@ -189,7 +189,7 @@ static void rq_afficherMauvaiseReponse(int idxUser, int idxBonne) {
         minitel.newXY(21, y);
         if (idxR == idxBonne) {
             minitel.attributs(FOND_VERT);
-            minitel.attributs(CARACTERE_BLANC);
+            minitel.attributs(CARACTERE_NOIR);
         } else if (idxR == idxUser) {
             minitel.attributs(INVERSION_FOND);
         }
@@ -201,7 +201,7 @@ static void rq_afficherMauvaiseReponse(int idxUser, int idxBonne) {
         minitel.newXY(1, y+1);
         if (idxL == idxBonne) {
             minitel.attributs(FOND_VERT);
-            minitel.attributs(CARACTERE_BLANC);
+            minitel.attributs(CARACTERE_NOIR);
         } else if (idxL == idxUser) {
             minitel.attributs(INVERSION_FOND);
         }
@@ -213,7 +213,7 @@ static void rq_afficherMauvaiseReponse(int idxUser, int idxBonne) {
         minitel.newXY(21, y+1);
         if (idxR == idxBonne) {
             minitel.attributs(FOND_VERT);
-            minitel.attributs(CARACTERE_BLANC);
+            minitel.attributs(CARACTERE_NOIR);
         } else if (idxR == idxUser) {
             minitel.attributs(INVERSION_FOND);
         }
