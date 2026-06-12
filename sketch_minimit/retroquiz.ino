@@ -268,31 +268,21 @@ static void rq_afficherBarreTimer(unsigned long elapsed, int barWidth, unsigned 
 
     minitel.noCursor();
 
-    // Premier affichage : afficher la barre complète
-    if (dernierBarWidth == -1) {
-        minitel.newXY(3, 21);
-        minitel.attributs(couleurFond);
-        for (int i = 0; i < 36; i++) minitel.print(" ");
-        derniereCouleur = couleurFond;
-        dernierBarWidth = 36;
-    }
-    // Changement de couleur : réafficher toute la barre restante
-    else if (couleurFond != derniereCouleur && barWidth > 0) {
-        minitel.newXY(3, 21);
-        minitel.attributs(couleurFond);
-        for (int i = 0; i < barWidth; i++) minitel.print(" ");
-        derniereCouleur = couleurFond;
-    }
-    // Décroissance : effacer les caractères de droite
-    else if (barWidth < dernierBarWidth) {
+    // Toujours réafficher la barre complète pour éviter les problèmes de rafraîchissement
+    minitel.newXY(3, 21);
+    minitel.attributs(couleurFond);
+    for (int i = 0; i < barWidth; i++) minitel.print(" ");
+
+    // Effacer la partie droite si la barre a rétréci
+    if (barWidth < dernierBarWidth || dernierBarWidth == -1) {
         minitel.attributs(FOND_NOIR);
-        for (int i = barWidth; i < dernierBarWidth; i++) {
-            minitel.newXY(3 + i, 21);
-            minitel.print(" ");
-        }
+        int startErase = (dernierBarWidth == -1) ? barWidth : barWidth;
+        for (int i = startErase; i < 36; i++) minitel.print(" ");
     }
 
+    // Mettre à jour les variables de suivi
     dernierBarWidth = barWidth;
+    derniereCouleur = couleurFond;
 
     minitel.attributs(FOND_NOIR);
     minitel.attributs(CARACTERE_BLANC);
